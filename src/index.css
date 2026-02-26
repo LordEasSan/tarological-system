@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* ===== Tailwind v4: use class-based dark mode (not media query) ===== */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* ===== MTPS Cyber/Hacker Theme — matching lordeassan.github.io ===== */
 
 @theme {
