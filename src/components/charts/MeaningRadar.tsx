@@ -33,13 +33,13 @@ export function MeaningRadar({ weights, className = '' }: MeaningRadarProps) {
       {
         label: 'Meaning Weights (θ)',
         data: values,
-        backgroundColor: 'rgba(108, 60, 181, 0.2)',
-        borderColor: isDark ? 'rgba(0, 255, 198, 0.8)' : 'rgba(111, 66, 193, 0.8)',
+        backgroundColor: isDark ? 'rgba(108, 60, 181, 0.2)' : 'rgba(0, 102, 255, 0.12)',
+        borderColor: isDark ? 'rgba(0, 255, 198, 0.8)' : 'rgba(0, 102, 255, 0.8)',
         borderWidth: 2,
-        pointBackgroundColor: isDark ? 'rgba(0, 255, 198, 1)' : 'rgba(111, 66, 193, 1)',
+        pointBackgroundColor: isDark ? 'rgba(0, 255, 198, 1)' : 'rgba(0, 102, 255, 1)',
         pointBorderColor: isDark ? '#1E2538' : '#fff',
-        pointHoverBackgroundColor: isDark ? '#fff' : 'rgba(111, 66, 193, 1)',
-        pointHoverBorderColor: isDark ? 'rgba(0, 255, 198, 1)' : 'rgba(111, 66, 193, 1)',
+        pointHoverBackgroundColor: isDark ? '#fff' : 'rgba(0, 102, 255, 1)',
+        pointHoverBorderColor: isDark ? 'rgba(0, 255, 198, 1)' : 'rgba(0, 102, 255, 1)',
       },
     ],
   };
@@ -53,18 +53,18 @@ export function MeaningRadar({ weights, className = '' }: MeaningRadarProps) {
         max: 1,
         ticks: {
           stepSize: 0.2,
-          color: isDark ? '#8a82a6' : '#6B7280',
+          color: isDark ? '#8a82a6' : '#475569',
           backdropColor: 'transparent',
           font: { size: 10 },
         },
         grid: {
-          color: isDark ? 'rgba(108, 60, 181, 0.15)' : 'rgba(111, 66, 193, 0.12)',
+          color: isDark ? 'rgba(108, 60, 181, 0.15)' : 'rgba(0, 102, 255, 0.08)',
         },
         angleLines: {
-          color: isDark ? 'rgba(108, 60, 181, 0.15)' : 'rgba(111, 66, 193, 0.12)',
+          color: isDark ? 'rgba(108, 60, 181, 0.15)' : 'rgba(0, 102, 255, 0.08)',
         },
         pointLabels: {
-          color: isDark ? '#bdc3c7' : '#374151',
+          color: isDark ? '#bdc3c7' : '#0F172A',
           font: { size: 11, family: 'Inter' },
         },
       },
@@ -75,9 +75,9 @@ export function MeaningRadar({ weights, className = '' }: MeaningRadarProps) {
       },
       tooltip: {
         backgroundColor: isDark ? 'rgba(26, 16, 61, 0.9)' : 'rgba(255, 255, 255, 0.95)',
-        titleColor: isDark ? '#00FFC6' : '#6F42C1',
+        titleColor: isDark ? '#00FFC6' : '#0066FF',
         bodyColor: isDark ? '#e8e4f0' : '#374151',
-        borderColor: isDark ? 'rgba(108, 60, 181, 0.3)' : 'rgba(111, 66, 193, 0.2)',
+        borderColor: isDark ? 'rgba(108, 60, 181, 0.3)' : 'rgba(0, 102, 255, 0.15)',
         borderWidth: 1,
       },
     },

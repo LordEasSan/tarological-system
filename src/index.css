@@ -95,7 +95,9 @@
 
 html {
   scroll-behavior: smooth;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  scroll-padding-top: 80px;
+  transition: background-color 280ms cubic-bezier(.16, .84, .44, 1),
+              color 280ms cubic-bezier(.16, .84, .44, 1);
 }
 
 body {
@@ -104,7 +106,8 @@ body {
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: background 280ms cubic-bezier(.16, .84, .44, 1),
+             color 280ms cubic-bezier(.16, .84, .44, 1);
 }
 
 /* Dark mode (default) */
@@ -113,10 +116,29 @@ body {
   color: var(--color-mtps-text);
 }
 
-/* Light mode */
+/* Light mode — matches lordeassan.github.io [data-theme="light"] */
 :not(.dark) body {
   background-color: var(--color-mtps-surface-light);
   color: var(--color-mtps-text-light);
+}
+
+/* ===== Light Mode Variable Overrides (matching GH Pages) ===== */
+:root:not(.dark) {
+  /* Accent → blue (GitHub Pages light accent) */
+  --color-mtps-purple: #0066FF;
+  --color-mtps-violet: #2563EB;
+  --color-mtps-accent-alt: #0066FF;
+
+  /* Text — higher contrast */
+  --color-mtps-text-light: #0F172A;
+  --color-mtps-muted: #475569;
+
+  /* Borders — subtler, matching --border-subtle in GH Pages light */
+  --color-mtps-border-light: rgba(15, 23, 42, 0.08);
+
+  /* Glass — matching GH Pages light */
+  --color-mtps-glass-light: rgba(255, 255, 255, 0.60);
+  --color-mtps-glass-border-light: rgba(15, 23, 42, 0.08);
 }
 
 /* ===== Utilities ===== */
@@ -171,23 +193,39 @@ body {
 :not(.dark) .glass {
   background: var(--color-mtps-glass-light);
   border-color: var(--color-mtps-glass-border-light);
+  box-shadow: 0 2px 8px rgba(2, 6, 23, 0.04);
 }
 
-/* Gradient text — cyber green to violet */
-.gradient-text {
-  background: linear-gradient(135deg, var(--color-mtps-accent), var(--color-mtps-accent-alt));
+/* Gradient text — adapts to theme */
+.dark .gradient-text {
+  background: linear-gradient(135deg, var(--color-mtps-accent), #6F42C1);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+:not(.dark) .gradient-text {
+  background: linear-gradient(135deg, #0066FF, #6F42C1);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 /* Accent glow for interactive elements */
-.accent-glow {
+.dark .accent-glow {
   box-shadow: 0 0 15px rgba(0, 255, 198, 0.15), 0 0 30px rgba(111, 66, 193, 0.1);
 }
 
-.accent-glow:hover {
+.dark .accent-glow:hover {
   box-shadow: 0 0 20px rgba(0, 255, 198, 0.3), 0 0 40px rgba(111, 66, 193, 0.2);
+}
+
+:not(.dark) .accent-glow {
+  box-shadow: 0 2px 12px rgba(0, 102, 255, 0.08);
+}
+
+:not(.dark) .accent-glow:hover {
+  box-shadow: 0 4px 24px rgba(0, 102, 255, 0.15);
 }
 
 /* Cyber card hover effect */
@@ -199,6 +237,15 @@ body {
 .dark .cyber-card:hover {
   border-color: rgba(0, 255, 198, 0.3);
   box-shadow: 0 4px 20px rgba(0, 255, 198, 0.1);
+}
+
+:not(.dark) .cyber-card {
+  border-color: rgba(15, 23, 42, 0.06);
+}
+
+:not(.dark) .cyber-card:hover {
+  border-color: rgba(0, 102, 255, 0.2);
+  box-shadow: 0 4px 20px rgba(0, 102, 255, 0.08);
 }
 
 /* Gradient button — accent to accent-alt */
@@ -226,12 +273,12 @@ html, body {
   overflow-x: hidden;
 }
 
-/* Smooth transitions for dark↔light mode on commonly themed elements */
+/* Smooth transitions for dark↔light mode — matching GH Pages --transition-medium */
 .glass, .cyber-card, .accent-glow, .btn-gradient,
 [class*="bg-mtps"], [class*="border-mtps"], [class*="text-mtps"] {
   transition-property: background-color, border-color, color, fill, stroke, box-shadow;
-  transition-duration: 0.2s;
-  transition-timing-function: ease;
+  transition-duration: 280ms;
+  transition-timing-function: cubic-bezier(.16, .84, .44, 1);
 }
 
 /* Exclude transitions from animations and transforms */

@@ -43,9 +43,9 @@ export function NeuralGraph() {
       };
     }
     return {
-      node: 'rgba(111, 66, 193, 0.4)',
-      edge: 'rgba(111, 66, 193, ',
-      nodeFill: 'rgba(111, 66, 193, 0.1)',
+      node: 'rgba(0, 102, 255, 0.35)',
+      edge: 'rgba(0, 102, 255, ',
+      nodeFill: 'rgba(0, 102, 255, 0.08)',
     };
   }, [isDark]);
 

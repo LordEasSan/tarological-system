@@ -34,15 +34,15 @@ export function IterationChart({ log, className = '' }: IterationChartProps) {
       {
         label: 'Q(i)',
         data: composites,
-        borderColor: isDark ? 'rgba(0, 255, 198, 0.9)' : 'rgba(111, 66, 193, 0.9)',
-        backgroundColor: isDark ? 'rgba(0, 255, 198, 0.1)' : 'rgba(111, 66, 193, 0.08)',
+        borderColor: isDark ? 'rgba(0, 255, 198, 0.9)' : 'rgba(0, 102, 255, 0.9)',
+        backgroundColor: isDark ? 'rgba(0, 255, 198, 0.1)' : 'rgba(0, 102, 255, 0.08)',
         borderWidth: 2,
         fill: true,
         tension: 0.3,
         pointBackgroundColor: composites.map((_, i) =>
           i === log.bestIteration - 1
             ? '#FFD700'
-            : isDark ? 'rgba(0, 255, 198, 0.8)' : 'rgba(111, 66, 193, 0.8)'
+            : isDark ? 'rgba(0, 255, 198, 0.8)' : 'rgba(0, 102, 255, 0.8)'
         ),
         pointRadius: composites.map((_, i) =>
           i === log.bestIteration - 1 ? 6 : 3
@@ -55,14 +55,14 @@ export function IterationChart({ log, className = '' }: IterationChartProps) {
       {
         label: 'ΔQ(i)',
         data: deltas,
-        borderColor: isDark ? 'rgba(111, 66, 193, 0.7)' : 'rgba(0, 200, 150, 0.7)',
-        backgroundColor: isDark ? 'rgba(111, 66, 193, 0.05)' : 'rgba(0, 200, 150, 0.05)',
+        borderColor: isDark ? 'rgba(111, 66, 193, 0.7)' : 'rgba(111, 66, 193, 0.5)',
+        backgroundColor: isDark ? 'rgba(111, 66, 193, 0.05)' : 'rgba(111, 66, 193, 0.04)',
         borderWidth: 1.5,
         borderDash: [4, 4],
         fill: false,
         tension: 0.3,
         pointRadius: 2,
-        pointBackgroundColor: isDark ? 'rgba(111, 66, 193, 0.6)' : 'rgba(0, 200, 150, 0.6)',
+        pointBackgroundColor: isDark ? 'rgba(111, 66, 193, 0.6)' : 'rgba(111, 66, 193, 0.5)',
       },
     ],
   };
@@ -72,25 +72,25 @@ export function IterationChart({ log, className = '' }: IterationChartProps) {
     maintainAspectRatio: false,
     scales: {
       x: {
-        ticks: { color: isDark ? '#8a82a6' : '#6B7280', font: { size: 10, family: 'JetBrains Mono, monospace' } },
-        grid: { color: isDark ? 'rgba(111, 66, 193, 0.1)' : 'rgba(0, 0, 0, 0.06)' },
+        ticks: { color: isDark ? '#8a82a6' : '#475569', font: { size: 10, family: 'JetBrains Mono, monospace' } },
+        grid: { color: isDark ? 'rgba(111, 66, 193, 0.1)' : 'rgba(0, 102, 255, 0.06)' },
       },
       y: {
         min: Math.min(0, ...deltas) - 0.05,
         max: 1.05,
-        ticks: { color: isDark ? '#8a82a6' : '#6B7280', font: { size: 10 }, stepSize: 0.2 },
-        grid: { color: isDark ? 'rgba(111, 66, 193, 0.1)' : 'rgba(0, 0, 0, 0.06)' },
+        ticks: { color: isDark ? '#8a82a6' : '#475569', font: { size: 10 }, stepSize: 0.2 },
+        grid: { color: isDark ? 'rgba(111, 66, 193, 0.1)' : 'rgba(0, 102, 255, 0.06)' },
       },
     },
     plugins: {
       legend: {
-        labels: { color: isDark ? '#bdc3c7' : '#374151', font: { size: 10 }, usePointStyle: true },
+        labels: { color: isDark ? '#bdc3c7' : '#0F172A', font: { size: 10 }, usePointStyle: true },
       },
       tooltip: {
         backgroundColor: isDark ? 'rgba(11, 15, 20, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-        titleColor: isDark ? '#00FFC6' : '#6F42C1',
+        titleColor: isDark ? '#00FFC6' : '#0066FF',
         bodyColor: isDark ? '#e8e4f0' : '#374151',
-        borderColor: isDark ? 'rgba(111, 66, 193, 0.4)' : 'rgba(111, 66, 193, 0.2)',
+        borderColor: isDark ? 'rgba(111, 66, 193, 0.4)' : 'rgba(0, 102, 255, 0.15)',
         borderWidth: 1,
       },
     },
