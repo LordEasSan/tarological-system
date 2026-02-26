@@ -1,0 +1,11 @@
+name = "mtps-api"
+main = "handler.js"
+compatibility_date = "2025-01-01"
+
+[vars]
+ENVIRONMENT = "production"
+
+# Uncomment for KV storage if needed
+# [[kv_namespaces]]
+# binding = "READINGS_KV"
+# id = "your-kv-namespace-id"

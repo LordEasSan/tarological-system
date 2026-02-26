@@ -1,0 +1,101 @@
+name: "🚀 Init — Project Setup & Verification"
+
+on:
+  workflow_dispatch:
+    inputs:
+      node_version:
+        description: "Node.js version to use"
+        required: false
+        default: "20"
+        type: choice
+        options:
+          - "20"
+          - "22"
+
+jobs:
+  setup:
+    name: "📦 Setup & Install"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node_version || '20' }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Show dependency tree
+        run: npm ls --depth=0
+
+  verify:
+    name: "✅ Full Verification"
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node_version || '20' }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript check
+        run: npx tsc --noEmit
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Run tests
+        run: npm run test -- --reporter=verbose
+
+      - name: Build
+        run: npm run build
+
+      - name: Verify build output
+        run: |
+          echo "=== Build output ==="
+          ls -la dist/
+          echo ""
+          echo "=== index.html exists ==="
+          test -f dist/index.html && echo "✅ OK" || echo "❌ MISSING"
+          echo ""
+          echo "=== Assets ==="
+          ls -la dist/assets/ 2>/dev/null || echo "No assets directory"
+
+  summary:
+    name: "📋 Project Summary"
+    runs-on: ubuntu-latest
+    needs: [setup, verify]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Print project info
+        run: |
+          echo "╔══════════════════════════════════════════════╗"
+          echo "║  MTPS — Meta-Tarological Positivist System   ║"
+          echo "╚══════════════════════════════════════════════╝"
+          echo ""
+          echo "📂 Project structure:"
+          find src -type f -name '*.ts' -o -name '*.tsx' | head -40
+          echo ""
+          echo "🔧 Engine modules:"
+          ls -1 src/engine/ 2>/dev/null || echo "  (none)"
+          echo ""
+          echo "📄 Pages:"
+          ls -1 src/pages/ 2>/dev/null || echo "  (none)"
+          echo ""
+          echo "🧩 Components:"
+          find src/components -type f -name '*.tsx' | sort
+          echo ""
+          echo "✅ Init workflow completed successfully!"
