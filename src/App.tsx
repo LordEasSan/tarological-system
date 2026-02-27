@@ -4,7 +4,7 @@ import { AppProvider } from './context/AppContext';
 import { TutorialProvider } from './context/TutorialContext';
 import { Layout } from './components/layout';
 import { TourOverlay } from './components/tutorial';
-import { WelcomePage, ConfigurePage, GeneratePage, VerifyPage, PhilosophicalPage, CosmologicalPage } from './pages';
+import { WelcomePage, ConfigurePage, GeneratePage, VerifyPage, PhilosophicalPage, CosmologicalPage, UnifiedReadingPage } from './pages';
 
 function App() {
   return (
@@ -20,6 +20,7 @@ function App() {
                 <Route path="/verify" element={<VerifyPage />} />
                 <Route path="/philosophical" element={<PhilosophicalPage />} />
                 <Route path="/cosmological" element={<CosmologicalPage />} />
+                <Route path="/reading" element={<UnifiedReadingPage />} />
               </Route>
             </Routes>
             <TourOverlay />

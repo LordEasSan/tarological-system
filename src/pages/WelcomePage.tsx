@@ -1,8 +1,15 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { Sparkles, Settings, Layers, ShieldCheck, ArrowRight, Brain, Orbit } from 'lucide-react';
+import { Sparkles, Settings, Layers, ShieldCheck, ArrowRight, Brain, Orbit, Compass } from 'lucide-react';
 
 const features = [
+  {
+    icon: Compass,
+    title: 'Unified Reading',
+    description: 'Symbolic-first pipeline — cards as generative engine, question as interpretive constraint, mode as lens.',
+    to: '/reading',
+    color: 'from-mtps-gold to-amber-500',
+  },
   {
     icon: Settings,
     title: 'Configure Parameters',
@@ -82,15 +89,27 @@ export function WelcomePage() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
                 id="tour-welcome-begin"
-                to="/configure"
+                to="/reading"
                 className="group flex items-center gap-2 px-6 py-3 rounded-xl font-medium text-sm
+                  bg-gradient-to-r from-mtps-gold to-amber-500 text-white
+                  hover:from-amber-500 hover:to-mtps-gold
+                  shadow-lg shadow-mtps-gold/20 hover:shadow-mtps-gold/30
+                  transition-all duration-300"
+              >
+                <Compass className="w-4 h-4" />
+                Unified Symbolic Reading
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </Link>
+
+              <Link
+                to="/configure"
+                className="flex items-center gap-2 px-6 py-3 rounded-xl font-medium text-sm
                   bg-gradient-to-r from-mtps-accent to-mtps-accent-alt text-white
                   hover:from-mtps-accent-alt hover:to-mtps-accent
                   shadow-lg shadow-mtps-accent/15 hover:shadow-mtps-accent/25
                   transition-all duration-300"
               >
                 Begin Configuration
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </Link>
 
               <Link
@@ -103,37 +122,13 @@ export function WelcomePage() {
               >
                 Quick Generate
               </Link>
-
-              <Link
-                to="/philosophical"
-                className="flex items-center gap-2 px-6 py-3 rounded-xl font-medium text-sm
-                  dark:bg-mtps-violet/20 dark:text-mtps-silver dark:hover:bg-mtps-violet/40
-                  bg-indigo-50 text-indigo-700 hover:bg-indigo-100
-                  border dark:border-mtps-violet/30 border-indigo-200
-                  transition-all duration-300"
-              >
-                <Brain className="w-4 h-4" />
-                Philosophical Mode
-              </Link>
-
-              <Link
-                to="/cosmological"
-                className="flex items-center gap-2 px-6 py-3 rounded-xl font-medium text-sm
-                  dark:bg-orange-500/20 dark:text-mtps-silver dark:hover:bg-orange-500/40
-                  bg-orange-50 text-orange-700 hover:bg-orange-100
-                  border dark:border-orange-400/30 border-orange-200
-                  transition-all duration-300"
-              >
-                <Orbit className="w-4 h-4" />
-                Cosmological Mode
-              </Link>
             </div>
           </motion.div>
         </section>
 
         {/* Feature Cards */}
         <section className="pb-20">
-          <div id="tour-welcome-features" className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+          <div id="tour-welcome-features" className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {features.map((feat, i) => (
               <motion.div
                 key={feat.title}

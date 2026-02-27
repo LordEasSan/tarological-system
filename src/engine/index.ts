@@ -55,3 +55,18 @@ export {
   generateCosmologicalInterpretation,
   executeCosmologicalQuery,
 } from './cosmological';
+
+// Unified Symbolic-First Pipeline (core architecture)
+export {
+  generateSpread,
+  computeBiasVector,
+  computeInteractionMatrix,
+  computeSymbolicConfiguration,
+  getInterpretiveLens,
+  getLensDescription,
+  getAllLenses,
+  generateUnifiedNarrative,
+  executeUnifiedReading,
+  reinterpretReading,
+} from './core';
+export type { SpreadResult } from './core';

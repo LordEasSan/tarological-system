@@ -4,3 +4,4 @@ export { GeneratePage } from './GeneratePage';
 export { VerifyPage } from './VerifyPage';
 export { PhilosophicalPage } from './PhilosophicalPage';
 export { CosmologicalPage } from './CosmologicalPage';
+export { UnifiedReadingPage } from './UnifiedReadingPage';

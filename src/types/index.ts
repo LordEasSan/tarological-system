@@ -405,6 +405,134 @@ export interface CosmologicalResponse {
   timestamp: string;
 }
 
+// ─── Unified Pipeline (Symbolic-First Architecture) ─────
+
+/** Interpretive bias vector — question's constraint on interpretation weights */
+export interface InterpretiveBiasVector {
+  /** Dimension weight adjustments from question semantics */
+  dimensionBias: Record<keyof MeaningWeights, number>;
+  /** Archetypal affinity bias (card id → affinity ∈ [0,1]) */
+  archetypeBias: Record<string, number>;
+  /** Semantic keywords extracted from question */
+  keywords: string[];
+  /** Temporal orientation bias */
+  temporalOrientation: 'past' | 'present' | 'future' | 'atemporal' | 'cyclic';
+  /** Source question */
+  rawQuestion: string;
+  /** Entropy of the question space ∈ [0,1] */
+  questionEntropy: number;
+}
+
+/** Pairwise interaction between two cards */
+export interface CardInteraction {
+  cardAIndex: number;
+  cardBIndex: number;
+  cardAName: string;
+  cardBName: string;
+  /** ∈ [-1, 1]: negative = reinforcing, positive = opposing */
+  polarityTension: number;
+  /** ∈ [0, 1] */
+  archetypalReinforcement: number;
+  keywordOverlap: number;
+  symbolicMovement: string;
+}
+
+/** Full interaction matrix M(i,j) for the spread */
+export interface CardInteractionMatrix {
+  interactions: CardInteraction[];
+  globalTension: number;
+  globalReinforcement: number;
+  entropicClusters: Array<{ theme: string; cardNames: string[] }>;
+  size: number;
+}
+
+/** Symbolic role of a card in the configuration */
+export type SymbolicRole = 'anchor' | 'catalyst' | 'shadow' | 'bridge';
+
+/** Dominant archetype entry in symbolic configuration */
+export interface DominantArchetype {
+  archetype: string;
+  cardName: string;
+  cardId: string;
+  score: number;
+  role: SymbolicRole;
+}
+
+/** Tension pair — opposing archetypal forces */
+export interface TensionPair {
+  positive: { archetype: string; cardName: string };
+  negative: { archetype: string; cardName: string };
+  tensionScore: number;
+}
+
+/** Entropic cluster — group of cards forming a thematic unit */
+export interface EntropicCluster {
+  theme: string;
+  cards: string[];
+  entropy: number;
+}
+
+/** Symbolic Configuration S = f(cards, interactionMatrix) — primary epistemic source */
+export interface SymbolicConfiguration {
+  dominantArchetypes: DominantArchetype[];
+  tensionPairs: TensionPair[];
+  entropicClusters: EntropicCluster[];
+  symbolicMovement: string[];
+  entropy: number;
+  interactionMatrix: CardInteractionMatrix;
+}
+
+/** Interpretive weight vector per mode */
+export interface InterpretiveWeightVector {
+  mode: InterrogationMode;
+  temporalEmphasis: number;
+  identityEmphasis: number;
+  archetypalPolarityEmphasis: number;
+  structuralPrincipleEmphasis: number;
+  practicalEmphasis: number;
+  lensDescription: string;
+}
+
+/** User profile context for personalization */
+export interface UserProfileContext {
+  priorReadings: Array<{
+    timestamp: string;
+    dominantArchetypes: string[];
+    entropy: number;
+    mode: InterrogationMode;
+  }>;
+  archetypeResonanceHistory: Record<string, number>;
+  entropyPattern: number[];
+  recurringAttractors: string[];
+}
+
+/** Unified narrative output — mandatory integration layer */
+export interface UnifiedNarrative {
+  existentialTension: string;
+  symbolicMovement: string;
+  archetypalDynamics: string;
+  structuralResponse: string;
+  opennessPreservation: string;
+  disclaimer: string;
+  fullNarrative: string;
+  cardReferences: Record<string, string>;
+}
+
+/** Complete unified reading response */
+export interface UnifiedReadingResponse {
+  mode: InterrogationMode;
+  question: string;
+  biasVector: InterpretiveBiasVector;
+  spread: PlacedCard[];
+  symbolicConfiguration: SymbolicConfiguration;
+  lens: InterpretiveWeightVector;
+  narrative: UnifiedNarrative;
+  verification: LTLVerification;
+  personalization: UserProfileContext;
+  qualityScore?: number;
+  timestamp: string;
+}
+
 export interface AppState {
   theme: ThemeMode;
   currentView: AppView;
