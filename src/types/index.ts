@@ -316,9 +316,94 @@ export interface PhilosophicalInterpretation {
 
 export type ThemeMode = 'dark' | 'light';
 
-export type InterrogationMode = 'divinatory' | 'philosophical';
+export type InterrogationMode = 'divinatory' | 'philosophical' | 'cosmological';
 
-export type AppView = 'welcome' | 'configure' | 'generate' | 'reading' | 'verify' | 'philosophical';
+export type AppView = 'welcome' | 'configure' | 'generate' | 'reading' | 'verify' | 'philosophical' | 'cosmological';
+
+// ─── Cosmological / Universal Archetypal Mode ───────
+
+/** Classification of cosmological question types */
+export type CosmologicalQuestionType =
+  | 'cosmogonic'
+  | 'structural-universal'
+  | 'archetypal-essence'
+  | 'symbolic-logic'
+  | 'consciousness';
+
+/** Temporal logic for universal-scope questions */
+export interface CosmologicalTemporalLogic {
+  operator: 'G' | 'F' | 'GF' | 'FG';
+  formula: string;
+  scope: 'universal' | 'atemporal' | 'cyclic';
+}
+
+/** Embedding for cosmological questions Qᵤ */
+export interface CosmologicalEmbedding {
+  dimensionWeights: Record<keyof MeaningWeights, number>;
+  archetypeAffinities: Record<string, number>;
+  entropy: number;
+  /** Abstract domain nouns detected */
+  domainNouns: string[];
+}
+
+/**
+ * Parsed cosmological query Qᵤ = (Cᵤ, Φᵤ, Δᵤ)
+ */
+export interface CosmologicalQuery {
+  rawQuestion: string;
+  questionType: CosmologicalQuestionType;
+  embedding: CosmologicalEmbedding;
+  temporalLogic: CosmologicalTemporalLogic;
+  configurationOpenness: number;
+}
+
+/** An archetypal force in the configuration map */
+export interface ArchetypalForce {
+  archetype: string;
+  cardName: string;
+  cardId: string;
+  /** Symbolic weight ∈ [0,1] */
+  weight: number;
+  /** Role in the generative sequence */
+  role: 'generative' | 'structuring' | 'dissolving' | 'synthesising';
+  keywords: string[];
+}
+
+/** Polarity sequence in the archetypal configuration */
+export interface PolaritySequence {
+  positive: string;
+  negative: string;
+  synthesis: string;
+}
+
+/** Archetypal Configuration Mapping ΨQᵤ */
+export interface ArchetypalConfiguration {
+  forces: ArchetypalForce[];
+  emergenceOrder: string[];
+  polaritySequences: PolaritySequence[];
+  systemEntropy: number;
+  configurationSummary: string;
+}
+
+/** Structured cosmological interpretation */
+export interface CosmologicalInterpretation {
+  symbolicModel: string;
+  archetypalMap: string;
+  polarityAnalysis: string;
+  entropyAssessment: string;
+  disclaimer: string;
+  fullText: string;
+}
+
+/** Complete cosmological response */
+export interface CosmologicalResponse {
+  query: CosmologicalQuery;
+  configuration: ArchetypalConfiguration;
+  spread: PlacedCard[];
+  verification: LTLVerification;
+  interpretation: CosmologicalInterpretation;
+  timestamp: string;
+}
 
 export interface AppState {
   theme: ThemeMode;

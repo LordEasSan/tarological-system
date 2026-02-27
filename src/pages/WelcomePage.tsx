@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { Sparkles, Settings, Layers, ShieldCheck, ArrowRight, Brain } from 'lucide-react';
+import { Sparkles, Settings, Layers, ShieldCheck, ArrowRight, Brain, Orbit } from 'lucide-react';
 
 const features = [
   {
@@ -30,6 +30,13 @@ const features = [
     description: 'Ask ontological questions — trajectory-space restructuring, attractor basins, and structural clarification.',
     to: '/philosophical',
     color: 'from-mtps-violet to-indigo-600',
+  },
+  {
+    icon: Orbit,
+    title: 'Cosmological Mode',
+    description: 'Ask universal questions — archetypal configuration mapping, symbolic models, and emergence order.',
+    to: '/cosmological',
+    color: 'from-orange-500 to-amber-500',
   },
 ];
 
@@ -108,13 +115,25 @@ export function WelcomePage() {
                 <Brain className="w-4 h-4" />
                 Philosophical Mode
               </Link>
+
+              <Link
+                to="/cosmological"
+                className="flex items-center gap-2 px-6 py-3 rounded-xl font-medium text-sm
+                  dark:bg-orange-500/20 dark:text-mtps-silver dark:hover:bg-orange-500/40
+                  bg-orange-50 text-orange-700 hover:bg-orange-100
+                  border dark:border-orange-400/30 border-orange-200
+                  transition-all duration-300"
+              >
+                <Orbit className="w-4 h-4" />
+                Cosmological Mode
+              </Link>
             </div>
           </motion.div>
         </section>
 
         {/* Feature Cards */}
         <section className="pb-20">
-          <div id="tour-welcome-features" className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div id="tour-welcome-features" className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
             {features.map((feat, i) => (
               <motion.div
                 key={feat.title}

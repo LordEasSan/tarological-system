@@ -43,3 +43,15 @@ export {
   executePhilosophicalQuery,
 } from './philosophical';
 export type { NarrativeIntegrationInput } from './philosophical';
+
+// Cosmological / Universal Archetypal Mode (parallel interpretive layer)
+export {
+  parseCosmologicalQuestion,
+  classifyCosmologicalQuestion,
+  isCosmologicalScope,
+  hasPersonalPronouns,
+  hasDecisionLanguage,
+  computeArchetypalConfiguration,
+  generateCosmologicalInterpretation,
+  executeCosmologicalQuery,
+} from './cosmological';
