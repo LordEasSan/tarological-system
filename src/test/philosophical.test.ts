@@ -15,6 +15,11 @@ import { classifyQuestion, parseQuestion } from '../engine/philosophical/questio
 import { computeTrajectoryRestriction } from '../engine/philosophical/trajectory';
 import { computeMeaningIntegration } from '../engine/philosophical/meaning-integration';
 import { generatePhilosophicalInterpretation } from '../engine/philosophical/response-generator';
+import {
+  generateNarrativeIntegrationSync,
+  generateLocalNarrative,
+  buildNarrativeInput,
+} from '../engine/philosophical/narrative-integration';
 import { executePhilosophicalQuery } from '../engine/philosophical/orchestrator';
 import { mockGenerate } from '../api/mock';
 import { verifyReading } from '../engine/ltl';
@@ -474,5 +479,150 @@ describe('Backward Compatibility — Divinatory Mode Unchanged', () => {
 
     const score = computeQualityScore(spread, defaultParams);
     expect(score.composite).toBeGreaterThanOrEqual(0);
+  });
+});
+
+// ─── 8. Narrative Integration Layer (NIL) Tests ─────
+
+describe('Narrative Integration Layer', () => {
+  function getNILData() {
+    const spread = getTestSpread();
+    const query = parseQuestion('What does it mean that this happened to me?');
+    const trajectory = computeTrajectoryRestriction(spread, query, defaultParams);
+    const meaning = computeMeaningIntegration(spread, query, trajectory, defaultParams);
+    const interpretation = generatePhilosophicalInterpretation(query, trajectory, meaning, spread);
+    return { spread, query, trajectory, meaning, interpretation };
+  }
+
+  it('generates all four required output fields', () => {
+    const { spread, query, trajectory, meaning, interpretation } = getNILData();
+    const nil = generateNarrativeIntegrationSync(query, trajectory, meaning, spread, interpretation);
+    expect(nil.integratedNarrative).toBeDefined();
+    expect(typeof nil.integratedNarrative).toBe('string');
+    expect(nil.symbolicFlow).toBeDefined();
+    expect(Array.isArray(nil.symbolicFlow)).toBe(true);
+    expect(typeof nil.existentialTension).toBe('string');
+    expect(typeof nil.trajectoryClarification).toBe('string');
+  });
+
+  it('symbolicFlow is a non-empty array of strings', () => {
+    const { spread, query, trajectory, meaning, interpretation } = getNILData();
+    const nil = generateNarrativeIntegrationSync(query, trajectory, meaning, spread, interpretation);
+    expect(nil.symbolicFlow.length).toBeGreaterThan(0);
+    nil.symbolicFlow.forEach(s => expect(typeof s).toBe('string'));
+  });
+
+  it('integratedNarrative contains the standard disclaimer', () => {
+    const { spread, query, trajectory, meaning, interpretation } = getNILData();
+    const nil = generateNarrativeIntegrationSync(query, trajectory, meaning, spread, interpretation);
+    expect(nil.integratedNarrative).toContain(
+      'structural clarification of your existential trajectory, not a deterministic prediction',
+    );
+  });
+
+  it('integratedNarrative references at least one card name from the spread', () => {
+    const { spread, query, trajectory, meaning, interpretation } = getNILData();
+    const nil = generateNarrativeIntegrationSync(query, trajectory, meaning, spread, interpretation);
+    const cardNames = spread.map(p => p.card.name);
+    const referenced = cardNames.some(name => nil.integratedNarrative.includes(name));
+    expect(referenced).toBe(true);
+  });
+
+  it('integratedNarrative references the question text', () => {
+    const { spread, query, trajectory, meaning, interpretation } = getNILData();
+    const nil = generateNarrativeIntegrationSync(query, trajectory, meaning, spread, interpretation);
+    expect(nil.integratedNarrative).toContain(query.rawQuestion);
+  });
+
+  it('does NOT contain predictive language', () => {
+    const { spread, query, trajectory, meaning, interpretation } = getNILData();
+    const nil = generateNarrativeIntegrationSync(query, trajectory, meaning, spread, interpretation);
+    const forbidden = ['will happen', 'you will', 'destined to', 'fated to', 'prophetic'];
+    for (const phrase of forbidden) {
+      expect(nil.integratedNarrative.toLowerCase()).not.toContain(phrase);
+      expect(nil.existentialTension.toLowerCase()).not.toContain(phrase);
+      expect(nil.trajectoryClarification.toLowerCase()).not.toContain(phrase);
+    }
+  });
+
+  it('existentialTension references attractor polarity', () => {
+    const { spread, query, trajectory, meaning, interpretation } = getNILData();
+    const nil = generateNarrativeIntegrationSync(query, trajectory, meaning, spread, interpretation);
+    const polarityTerms = ['constructive', 'destructive', 'liminal', 'polarity', 'orientation', 'threshold'];
+    const found = polarityTerms.some(t => nil.existentialTension.toLowerCase().includes(t));
+    expect(found).toBe(true);
+  });
+
+  it('trajectoryClarification references entropy level', () => {
+    const { spread, query, trajectory, meaning, interpretation } = getNILData();
+    const nil = generateNarrativeIntegrationSync(query, trajectory, meaning, spread, interpretation);
+    expect(nil.trajectoryClarification.toLowerCase()).toMatch(/entropy|high|moderate|low/);
+  });
+
+  it('trajectoryClarification references liveness', () => {
+    const { spread, query, trajectory, meaning, interpretation } = getNILData();
+    const nil = generateNarrativeIntegrationSync(query, trajectory, meaning, spread, interpretation);
+    expect(nil.trajectoryClarification).toMatch(/[Ll]iveness/);
+  });
+
+  it('buildNarrativeInput correctly maps spread cards', () => {
+    const { spread, query, trajectory, meaning } = getNILData();
+    const input = buildNarrativeInput(query, trajectory, meaning, spread);
+    expect(input.cards.length).toBe(spread.length);
+    input.cards.forEach((c, i) => {
+      expect(c.name).toBe(spread[i].card.name);
+      expect(c.position).toBe(spread[i].position.label);
+    });
+  });
+
+  it('buildNarrativeInput correctly maps attractor basins', () => {
+    const { spread, query, trajectory, meaning } = getNILData();
+    const input = buildNarrativeInput(query, trajectory, meaning, spread);
+    expect(input.attractorBasins.length).toBe(trajectory.attractors.length);
+    input.attractorBasins.forEach((a, i) => {
+      expect(a.archetype).toBe(trajectory.attractors[i].archetype);
+      expect(a.dominance).toBe(trajectory.attractors[i].dominance);
+    });
+  });
+
+  it('works with all 5 question types', () => {
+    const questions = [
+      'What is the nature of reality?',
+      'Where am I heading?',
+      'Who am I becoming?',
+      'What does it mean that this happened to me?',
+      'What would it imply if I had chosen differently?',
+    ];
+    const spread = getTestSpread();
+
+    for (const q of questions) {
+      const query = parseQuestion(q);
+      const trajectory = computeTrajectoryRestriction(spread, query, defaultParams);
+      const meaning = computeMeaningIntegration(spread, query, trajectory, defaultParams);
+      const interpretation = generatePhilosophicalInterpretation(query, trajectory, meaning, spread);
+      const nil = generateNarrativeIntegrationSync(query, trajectory, meaning, spread, interpretation);
+      expect(nil.integratedNarrative.length).toBeGreaterThan(100);
+      expect(nil.symbolicFlow.length).toBeGreaterThan(0);
+      expect(nil.existentialTension.length).toBeGreaterThan(0);
+      expect(nil.trajectoryClarification.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('orchestrator includes narrativeIntegration in response', () => {
+    const generateFn = (p: TarotParameters) => mockGenerate(p).spread;
+    const result = executePhilosophicalQuery('Who am I becoming?', defaultParams, generateFn);
+    expect(result.narrativeIntegration).toBeDefined();
+    expect(result.narrativeIntegration!.integratedNarrative.length).toBeGreaterThan(0);
+    expect(Array.isArray(result.narrativeIntegration!.symbolicFlow)).toBe(true);
+  });
+
+  it('generateLocalNarrative produces valid output from raw input', () => {
+    const { spread, query, trajectory, meaning, interpretation } = getNILData();
+    const input = buildNarrativeInput(query, trajectory, meaning, spread);
+    const nil = generateLocalNarrative(input, interpretation);
+    expect(nil.integratedNarrative).toContain('Integrated Ontological Narrative');
+    expect(nil.integratedNarrative).toContain('Symbolic Configuration');
+    expect(nil.integratedNarrative).toContain('Existential Tension');
+    expect(nil.integratedNarrative).toContain('Trajectory Dynamics');
   });
 });

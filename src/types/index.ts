@@ -264,6 +264,18 @@ export interface MeaningIntegration {
   entropyLevel: number;
 }
 
+/** LLM-generated narrative integration output */
+export interface NarrativeIntegration {
+  /** Integrated ontological narrative (Markdown) */
+  integratedNarrative: string;
+  /** Ordered symbolic flow of archetypal symbols referenced */
+  symbolicFlow: string[];
+  /** Core existential tension identified */
+  existentialTension: string;
+  /** Trajectory clarification synthesising attractor dynamics */
+  trajectoryClarification: string;
+}
+
 /** Complete philosophical response */
 export interface PhilosophicalResponse {
   /** The parsed query */
@@ -278,6 +290,8 @@ export interface PhilosophicalResponse {
   verification: LTLVerification;
   /** Generated interpretation sections */
   interpretation: PhilosophicalInterpretation;
+  /** Optional LLM-generated narrative integration */
+  narrativeIntegration?: NarrativeIntegration;
   /** Timestamp */
   timestamp: string;
 }

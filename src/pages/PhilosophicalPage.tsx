@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Brain, Sparkles, Send, RotateCcw, ShieldCheck, Eye,
-  BookOpen, Compass, Fingerprint, HelpCircle, GitBranch,
+  BookOpen, Compass, Fingerprint, HelpCircle, GitBranch, ScrollText,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
@@ -45,7 +45,7 @@ export function PhilosophicalPage() {
   const [question, setQuestion] = useState('');
   const [response, setResponse] = useState<PhilosophicalResponse | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [view, setView] = useState<'interpretation' | 'spread' | 'cards' | 'verification'>('interpretation');
+  const [view, setView] = useState<'interpretation' | 'narrative' | 'spread' | 'cards' | 'verification'>('interpretation');
 
   const handleSubmit = useCallback(() => {
     if (!question.trim() || isProcessing) return;
@@ -275,7 +275,7 @@ export function PhilosophicalPage() {
 
           {/* View Tabs */}
           <div className="flex gap-1 p-1 rounded-xl dark:bg-mtps-card bg-gray-100 w-fit overflow-x-auto max-w-full">
-            {(['interpretation', 'spread', 'cards', 'verification'] as const).map((v) => (
+            {(['interpretation', 'narrative', 'spread', 'cards', 'verification'] as const).map((v) => (
               <button
                 key={v}
                 onClick={() => setView(v)}
@@ -329,6 +329,101 @@ export function PhilosophicalPage() {
                     if (line.trim() === '') return <br key={i} />;
                     return <p key={i} className="text-sm leading-relaxed dark:text-mtps-text text-mtps-text-light">{line}</p>;
                   })}
+                </div>
+              </motion.div>
+            )}
+
+            {/* Narrative Integration View */}
+            {view === 'narrative' && response.narrativeIntegration && (
+              <motion.div
+                key="narrative"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="space-y-6"
+              >
+                {/* Full Narrative */}
+                <div className="p-6 rounded-2xl border dark:border-mtps-border dark:bg-mtps-card/30
+                  border-mtps-border-light bg-white">
+                  <div className="flex items-center gap-2 mb-4">
+                    <ScrollText className="w-4 h-4 dark:text-mtps-violet text-indigo-500" />
+                    <h3 className="font-display text-sm font-bold dark:text-mtps-gold text-mtps-purple">
+                      Integrated Ontological Narrative
+                    </h3>
+                  </div>
+                  <div className="prose prose-sm dark:prose-invert max-w-none">
+                    {response.narrativeIntegration.integratedNarrative.split('\n').map((line, i) => {
+                      if (line.startsWith('## '))
+                        return <h2 key={i} className="font-display gradient-text text-lg">{line.slice(3)}</h2>;
+                      if (line.startsWith('### '))
+                        return <h3 key={i} className="font-display dark:text-mtps-gold text-mtps-purple text-base mt-6 mb-2">{line.slice(4)}</h3>;
+                      if (line.startsWith('> '))
+                        return (
+                          <blockquote key={i} className="border-l-2 dark:border-mtps-violet border-mtps-accent-alt
+                            pl-4 italic dark:text-mtps-silver text-mtps-text-light text-sm my-3">
+                            {line.slice(2)}
+                          </blockquote>
+                        );
+                      if (line.startsWith('- **'))
+                        return <p key={i} className="text-sm leading-relaxed ml-2 my-1 dark:text-mtps-text text-mtps-text-light">{line.slice(2)}</p>;
+                      if (line.startsWith('- '))
+                        return <p key={i} className="text-sm leading-relaxed ml-4 my-0.5 dark:text-mtps-silver text-mtps-muted">{line.slice(2)}</p>;
+                      if (line.startsWith('---'))
+                        return <hr key={i} className="my-6 dark:border-mtps-border border-mtps-border-light" />;
+                      if (line.startsWith('⚑'))
+                        return <p key={i} className="text-xs leading-relaxed italic dark:text-mtps-muted text-mtps-muted mt-2">{line}</p>;
+                      if (line.startsWith('*—'))
+                        return <p key={i} className="text-[10px] italic dark:text-mtps-muted/60 text-mtps-muted/60 mt-4">{line}</p>;
+                      if (line.trim() === '') return <br key={i} />;
+                      return <p key={i} className="text-sm leading-relaxed dark:text-mtps-text text-mtps-text-light">{line}</p>;
+                    })}
+                  </div>
+                </div>
+
+                {/* Symbolic Flow + Tension + Trajectory */}
+                <div className="grid md:grid-cols-3 gap-4">
+                  {/* Symbolic Flow */}
+                  <div className="p-4 rounded-2xl border dark:border-mtps-border dark:bg-mtps-card/30
+                    border-mtps-border-light bg-white">
+                    <h4 className="font-display text-xs font-bold dark:text-mtps-gold text-mtps-purple mb-3">
+                      Symbolic Flow
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {response.narrativeIntegration.symbolicFlow.map((symbol, i) => (
+                        <span
+                          key={i}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium
+                            dark:bg-mtps-violet/15 dark:text-mtps-violet bg-indigo-50 text-indigo-600
+                            border dark:border-mtps-violet/20 border-indigo-200"
+                        >
+                          <span className="text-[9px] font-mono dark:text-mtps-muted text-indigo-400">{i + 1}</span>
+                          {symbol}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Existential Tension */}
+                  <div className="p-4 rounded-2xl border dark:border-mtps-border dark:bg-mtps-card/30
+                    border-mtps-border-light bg-white">
+                    <h4 className="font-display text-xs font-bold dark:text-amber-400 text-amber-600 mb-3">
+                      Existential Tension
+                    </h4>
+                    <p className="text-xs leading-relaxed dark:text-mtps-text text-mtps-text-light">
+                      {response.narrativeIntegration.existentialTension}
+                    </p>
+                  </div>
+
+                  {/* Trajectory Clarification */}
+                  <div className="p-4 rounded-2xl border dark:border-mtps-border dark:bg-mtps-card/30
+                    border-mtps-border-light bg-white">
+                    <h4 className="font-display text-xs font-bold dark:text-mtps-teal text-emerald-600 mb-3">
+                      Trajectory Clarification
+                    </h4>
+                    <p className="text-xs leading-relaxed dark:text-mtps-text text-mtps-text-light">
+                      {response.narrativeIntegration.trajectoryClarification}
+                    </p>
+                  </div>
                 </div>
               </motion.div>
             )}

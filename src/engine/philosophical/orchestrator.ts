@@ -19,6 +19,7 @@ import { parseQuestion } from './question-parser';
 import { computeTrajectoryRestriction } from './trajectory';
 import { computeMeaningIntegration } from './meaning-integration';
 import { generatePhilosophicalInterpretation } from './response-generator';
+import { generateNarrativeIntegrationSync } from './narrative-integration';
 import { verifyReading } from '../ltl';
 import { IterationRunner } from '../iteration';
 
@@ -73,6 +74,11 @@ export function executePhilosophicalQuery(
     query, trajectory, meaning, spread,
   );
 
+  // 7. Narrative Integration Layer (sync / local fallback)
+  const narrativeIntegration = generateNarrativeIntegrationSync(
+    query, trajectory, meaning, spread, interpretation,
+  );
+
   return {
     query,
     trajectory,
@@ -80,6 +86,7 @@ export function executePhilosophicalQuery(
     spread,
     verification,
     interpretation,
+    narrativeIntegration,
     timestamp: new Date().toISOString(),
   };
 }

@@ -36,5 +36,10 @@ export {
   computeTrajectoryRestriction,
   computeMeaningIntegration,
   generatePhilosophicalInterpretation,
+  generateNarrativeIntegration,
+  generateNarrativeIntegrationSync,
+  generateLocalNarrative,
+  buildNarrativeInput,
   executePhilosophicalQuery,
 } from './philosophical';
+export type { NarrativeIntegrationInput } from './philosophical';
