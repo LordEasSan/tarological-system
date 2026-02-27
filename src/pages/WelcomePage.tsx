@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { Sparkles, Settings, Layers, ShieldCheck, ArrowRight } from 'lucide-react';
+import { Sparkles, Settings, Layers, ShieldCheck, ArrowRight, Brain } from 'lucide-react';
 
 const features = [
   {
@@ -23,6 +23,13 @@ const features = [
     description: 'Run LTL model checking — safety, cosafety, liveness, coliveness — on every generated reading.',
     to: '/verify',
     color: 'from-mtps-teal to-emerald-600',
+  },
+  {
+    icon: Brain,
+    title: 'Philosophical Mode',
+    description: 'Ask ontological questions — trajectory-space restructuring, attractor basins, and structural clarification.',
+    to: '/philosophical',
+    color: 'from-mtps-violet to-indigo-600',
   },
 ];
 
@@ -89,13 +96,25 @@ export function WelcomePage() {
               >
                 Quick Generate
               </Link>
+
+              <Link
+                to="/philosophical"
+                className="flex items-center gap-2 px-6 py-3 rounded-xl font-medium text-sm
+                  dark:bg-mtps-violet/20 dark:text-mtps-silver dark:hover:bg-mtps-violet/40
+                  bg-indigo-50 text-indigo-700 hover:bg-indigo-100
+                  border dark:border-mtps-violet/30 border-indigo-200
+                  transition-all duration-300"
+              >
+                <Brain className="w-4 h-4" />
+                Philosophical Mode
+              </Link>
             </div>
           </motion.div>
         </section>
 
         {/* Feature Cards */}
         <section className="pb-20">
-          <div id="tour-welcome-features" className="grid md:grid-cols-3 gap-6">
+          <div id="tour-welcome-features" className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {features.map((feat, i) => (
               <motion.div
                 key={feat.title}

@@ -1,5 +1,5 @@
 import { createContext, useContext, useReducer, type ReactNode } from 'react';
-import type { TarotParameters, Reading, AppState, AppView } from '../types';
+import type { TarotParameters, Reading, AppState, AppView, InterrogationMode } from '../types';
 
 const defaultParameters: TarotParameters = {
   archetypeFamily: 'Jungian',
@@ -20,6 +20,7 @@ const defaultParameters: TarotParameters = {
 const initialState: AppState = {
   theme: 'dark',
   currentView: 'welcome',
+  interrogationMode: 'divinatory',
   parameters: defaultParameters,
   currentReading: null,
   isLoading: false,
@@ -32,6 +33,7 @@ type AppAction =
   | { type: 'SET_READING'; payload: Reading }
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_ERROR'; payload: string | null }
+  | { type: 'SET_INTERROGATION_MODE'; payload: InterrogationMode }
   | { type: 'RESET' };
 
 function appReducer(state: AppState, action: AppAction): AppState {
@@ -46,6 +48,8 @@ function appReducer(state: AppState, action: AppAction): AppState {
       return { ...state, isLoading: action.payload };
     case 'SET_ERROR':
       return { ...state, error: action.payload, isLoading: false };
+    case 'SET_INTERROGATION_MODE':
+      return { ...state, interrogationMode: action.payload };
     case 'RESET':
       return { ...initialState, theme: state.theme };
     default:

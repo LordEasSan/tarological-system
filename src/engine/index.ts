@@ -28,3 +28,13 @@ export type { QualityScore, DimensionScore, QualityDimension } from './scoring';
 
 export { IterationRunner, DEFAULT_ITERATION_CONFIG } from './iteration';
 export type { IterationLog, IterationEntry, IterationConfig, IterationCallback, DimensionTrend } from './iteration';
+
+// Philosophical-Ontological Query Mode (parallel interpretive layer)
+export {
+  parseQuestion,
+  classifyQuestion,
+  computeTrajectoryRestriction,
+  computeMeaningIntegration,
+  generatePhilosophicalInterpretation,
+  executePhilosophicalQuery,
+} from './philosophical';

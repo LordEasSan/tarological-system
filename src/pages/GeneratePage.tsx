@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Sparkles, RotateCcw, BookOpen, ShieldCheck, RefreshCcw, Zap, Bot, Cpu } from 'lucide-react';
+import { Sparkles, RotateCcw, BookOpen, ShieldCheck, RefreshCcw, Zap, Bot, Cpu, Brain } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { SpreadVisualizer, TarotCardView } from '../components/cards';
@@ -160,6 +160,15 @@ export function GeneratePage() {
               border dark:border-mtps-border border-mtps-border-light transition-all"
           >
             <RotateCcw className="w-3.5 h-3.5" /> Reconfigure
+          </button>
+          <button
+            onClick={() => navigate('/philosophical')}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium
+              dark:bg-mtps-violet/20 dark:text-mtps-silver dark:hover:bg-mtps-violet/40
+              bg-indigo-50 text-indigo-700 hover:bg-indigo-100
+              border dark:border-mtps-violet/30 border-indigo-200 transition-all"
+          >
+            <Brain className="w-3.5 h-3.5" /> Philosophical
           </button>
           <button
             id="tour-gen-generate-btn"

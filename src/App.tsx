@@ -4,7 +4,7 @@ import { AppProvider } from './context/AppContext';
 import { TutorialProvider } from './context/TutorialContext';
 import { Layout } from './components/layout';
 import { TourOverlay } from './components/tutorial';
-import { WelcomePage, ConfigurePage, GeneratePage, VerifyPage } from './pages';
+import { WelcomePage, ConfigurePage, GeneratePage, VerifyPage, PhilosophicalPage } from './pages';
 
 function App() {
   return (
@@ -18,6 +18,7 @@ function App() {
                 <Route path="/configure" element={<ConfigurePage />} />
                 <Route path="/generate" element={<GeneratePage />} />
                 <Route path="/verify" element={<VerifyPage />} />
+                <Route path="/philosophical" element={<PhilosophicalPage />} />
               </Route>
             </Routes>
             <TourOverlay />
