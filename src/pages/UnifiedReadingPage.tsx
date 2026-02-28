@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Sparkles, Send, RotateCcw, ShieldCheck, Eye, Layers,
   BookOpen, Brain, Orbit, Grid3X3, FileText, Compass,
-  ArrowRight, RefreshCcw, Zap,
+  ArrowRight, RefreshCcw, Zap, MessageCircle,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
@@ -17,6 +17,7 @@ import type {
   InterrogationMode,
   UnifiedReadingResponse,
   UserProfileContext,
+  SymbolicRole,
 } from '../types';
 
 // ─── Mode Configuration ─────────────────────────────
@@ -81,14 +82,15 @@ const EXAMPLE_QUESTIONS: Record<InterrogationMode, string[]> = {
 
 // ─── View Tabs ──────────────────────────────────────
 
-type ViewTab = 'spread' | 'interaction-map' | 'mode-lens' | 'narrative' | 'structural';
+type ViewTab = 'narrative' | 'spread' | 'interaction-map' | 'mode-lens' | 'structural-explanation' | 'structural';
 
 const VIEW_TABS: { id: ViewTab; label: string; icon: typeof Eye }[] = [
+  { id: 'narrative', label: 'Narrative', icon: MessageCircle },
   { id: 'spread', label: 'Extracted Spread', icon: Layers },
-  { id: 'interaction-map', label: 'Symbolic Interaction Map', icon: Grid3X3 },
+  { id: 'interaction-map', label: 'Interaction Map', icon: Grid3X3 },
   { id: 'mode-lens', label: 'Mode Lens', icon: Eye },
-  { id: 'narrative', label: 'Integrated Narrative', icon: FileText },
-  { id: 'structural', label: 'Structural Clarification', icon: ShieldCheck },
+  { id: 'structural-explanation', label: 'Structural Explanation', icon: FileText },
+  { id: 'structural', label: 'Verification', icon: ShieldCheck },
 ];
 
 // ─── Component ──────────────────────────────────────
@@ -345,7 +347,12 @@ export function UnifiedReadingPage() {
                   )}
                   {view === 'narrative' && (
                     <motion.div key="narrative" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                      <NarrativeView response={response} />
+                      <QuestionNarrativeView response={response} />
+                    </motion.div>
+                  )}
+                  {view === 'structural-explanation' && (
+                    <motion.div key="structural-explanation" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                      <StructuralExplanationView response={response} />
                     </motion.div>
                   )}
                   {view === 'structural' && (
@@ -371,28 +378,37 @@ export function UnifiedReadingPage() {
 // ─── Sub-Views ──────────────────────────────────────
 
 function SpreadView({ response }: { response: UnifiedReadingResponse }) {
+  // Build role map from symbolic configuration
+  const roleMap: Record<string, SymbolicRole> = {};
+  for (const arch of response.symbolicConfiguration.dominantArchetypes) {
+    roleMap[arch.cardId] = arch.role;
+  }
+
   return (
     <div className="space-y-6">
       <div className="p-6 rounded-2xl border dark:border-mtps-border dark:bg-mtps-card/50 border-mtps-border-light bg-white">
         <h3 className="text-lg font-bold dark:text-mtps-text text-mtps-text-light mb-4">
           Extracted Spread — {response.spread.length} Cards
         </h3>
-        <SpreadVisualizer spread={response.spread} />
+        <SpreadVisualizer spread={response.spread} roleMap={roleMap} />
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
         {response.spread.map((placed) => {
           const archEntry = response.symbolicConfiguration.dominantArchetypes
             .find(a => a.cardId === placed.card.id);
           return (
-            <div key={placed.card.id} className="relative">
-              <TarotCardView card={placed.card} size="md" />
-              {archEntry && (
-                <div className="absolute top-2 right-2 px-2 py-0.5 rounded-full text-xs font-medium
-                  dark:bg-mtps-deep/80 dark:text-mtps-accent bg-white/80 text-mtps-purple border
-                  dark:border-mtps-border border-mtps-border-light">
-                  {archEntry.role}
+            <div key={placed.card.id} className="flex flex-col items-center gap-2">
+              <TarotCardView
+                card={placed.card}
+                size="md"
+                showMeaning
+                role={archEntry?.role}
+              />
+              <div className="text-center">
+                <div className="text-xs font-medium dark:text-mtps-text text-mtps-text-light">
+                  {placed.position.label}
                 </div>
-              )}
+              </div>
             </div>
           );
         })}
@@ -565,9 +581,117 @@ function ModeLensView({ response }: { response: UnifiedReadingResponse }) {
   );
 }
 
-function NarrativeView({ response }: { response: UnifiedReadingResponse }) {
+// ─── ROLE BADGE COLORS ────────────────────────────────────────────
+const ROLE_BADGE: Record<SymbolicRole, string> = {
+  anchor: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
+  catalyst: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
+  shadow: 'bg-rose-500/20 text-rose-300 border-rose-500/30',
+  bridge: 'bg-violet-500/20 text-violet-300 border-violet-500/30',
+};
+
+function QuestionNarrativeView({ response }: { response: UnifiedReadingResponse }) {
+  const qn = response.questionNarrative;
+
+  const renderMarkdown = (text: string) =>
+    text
+      .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+      .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.+?)\*/g, '<em>$1</em>')
+      .replace(/^- (.+)$/gm, '<li>$1</li>')
+      .replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>')
+      .replace(/^---$/gm, '<hr/>')
+      .replace(/\n\n/g, '</p><p>')
+      .replace(/^(.+)$/gm, (line) => {
+        if (line.startsWith('<')) return line;
+        return `<p>${line}</p>`;
+      });
+
+  return (
+    <div className="space-y-6">
+      {/* Question Restatement */}
+      <div className="p-5 rounded-2xl border dark:border-mtps-accent/30 dark:bg-mtps-accent/5
+        border-mtps-purple/30 bg-mtps-purple/5 text-center">
+        <p className="text-sm uppercase tracking-wider dark:text-mtps-accent text-mtps-purple font-semibold mb-2">
+          Your Question
+        </p>
+        <p className="text-lg font-medium dark:text-mtps-text text-mtps-text-light italic">
+          "{qn.questionRestatement}"
+        </p>
+      </div>
+
+      {/* Full Narrative — Card Master Voice */}
+      <div className="p-6 rounded-2xl border dark:border-mtps-border dark:bg-mtps-card/50 border-mtps-border-light bg-white">
+        <h3 className="text-lg font-bold dark:text-mtps-text text-mtps-text-light mb-4 flex items-center gap-2">
+          <MessageCircle className="w-5 h-5 dark:text-mtps-accent text-mtps-purple" />
+          Answer Through the Cards
+        </h3>
+        <div
+          className="prose prose-sm dark:prose-invert max-w-none
+            dark:prose-headings:text-mtps-text prose-headings:text-mtps-text-light
+            dark:prose-p:text-mtps-muted prose-p:text-mtps-muted
+            dark:prose-strong:text-mtps-silver prose-strong:text-mtps-text-light
+            dark:prose-em:text-mtps-accent prose-em:text-mtps-purple
+            dark:prose-hr:border-mtps-border prose-hr:border-mtps-border-light"
+          dangerouslySetInnerHTML={{ __html: renderMarkdown(qn.fullNarrative) }}
+        />
+      </div>
+
+      {/* Card-by-Card Contributions */}
+      <div className="p-6 rounded-2xl border dark:border-mtps-border dark:bg-mtps-card/50 border-mtps-border-light bg-white">
+        <h3 className="text-lg font-bold dark:text-mtps-text text-mtps-text-light mb-4">
+          Card Contributions
+        </h3>
+        <div className="space-y-4">
+          {qn.cardExplanations.map((card, i) => (
+            <div key={i} className="flex gap-3">
+              <div className="flex-shrink-0 mt-1">
+                <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium border
+                  ${ROLE_BADGE[card.role]}`}>
+                  {card.role}
+                </span>
+              </div>
+              <div>
+                <p className="text-sm font-semibold dark:text-mtps-text text-mtps-text-light mb-1">
+                  {card.cardName}
+                </p>
+                <p className="text-sm dark:text-mtps-muted text-mtps-muted leading-relaxed">
+                  {card.contribution}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Synthesis */}
+      <div className="p-5 rounded-2xl border dark:border-mtps-border dark:bg-mtps-deep/40
+        border-mtps-border-light bg-gray-50">
+        <h3 className="text-sm font-bold dark:text-mtps-silver text-mtps-text-light mb-2 uppercase tracking-wider">
+          Synthesis
+        </h3>
+        <p className="text-sm dark:text-mtps-muted text-mtps-muted leading-relaxed">
+          {qn.synthesis}
+        </p>
+      </div>
+
+      {/* Disclaimer */}
+      <div className="p-4 rounded-xl border dark:border-mtps-border/50 dark:bg-mtps-deep/20
+        border-mtps-border-light/50 bg-gray-50/50 text-center">
+        <p className="text-xs dark:text-mtps-muted/70 text-mtps-muted/60 italic">
+          {qn.disclaimer}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function StructuralExplanationView({ response }: { response: UnifiedReadingResponse }) {
   return (
     <div className="p-6 rounded-2xl border dark:border-mtps-border dark:bg-mtps-card/50 border-mtps-border-light bg-white">
+      <h3 className="text-lg font-bold dark:text-mtps-text text-mtps-text-light mb-4">
+        Structural Explanation
+      </h3>
       <div
         className="prose prose-sm dark:prose-invert max-w-none
           dark:prose-headings:text-mtps-text prose-headings:text-mtps-text-light

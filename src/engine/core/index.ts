@@ -24,4 +24,6 @@ export { getInterpretiveLens, getLensDescription, getAllLenses } from './interpr
 
 export { generateUnifiedNarrative } from './narrative-integration';
 
+export { generateQuestionTargetedNarrative } from './question-narrative';
+
 export { executeUnifiedReading, reinterpretReading } from './unified-pipeline';

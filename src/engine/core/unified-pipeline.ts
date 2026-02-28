@@ -30,6 +30,7 @@ import { computeInteractionMatrix } from './interaction-matrix';
 import { computeSymbolicConfiguration } from './symbolic-configuration';
 import { getInterpretiveLens } from './interpretive-lens';
 import { generateUnifiedNarrative } from './narrative-integration';
+import { generateQuestionTargetedNarrative } from './question-narrative';
 import { verifyReading } from '../ltl';
 
 // ─── Personalization Context Builder ────────────────
@@ -185,8 +186,13 @@ export function executeUnifiedReading(
   // ── Step 6: Mode-Specific Interpretive Lens ────
   const lens = getInterpretiveLens(mode);
 
-  // ── Step 7: Narrative Integration (through cards) ────
+  // ── Step 7: Narrative Integration (structural explanation) ────
   const narrative = generateUnifiedNarrative(
+    symbolicConfiguration, spread, biasVector, lens, context, question,
+  );
+
+  // ── Step 7b: Question-Targeted Narrative (Card Master voice) ────
+  const questionNarrative = generateQuestionTargetedNarrative(
     symbolicConfiguration, spread, biasVector, lens, context, question,
   );
 
@@ -224,6 +230,7 @@ export function executeUnifiedReading(
     symbolicConfiguration,
     lens,
     narrative,
+    questionNarrative,
     verification,
     personalization: context,
     qualityScore,

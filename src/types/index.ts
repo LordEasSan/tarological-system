@@ -518,6 +518,26 @@ export interface UnifiedNarrative {
   cardReferences: Record<string, string>;
 }
 
+/** Question-targeted narrative — Card Master voice addressing the question through cards */
+export interface QuestionTargetedNarrative {
+  /** Question restated in interpretive form */
+  questionRestatement: string;
+  /** Card-by-card woven explanation addressing the question */
+  cardExplanations: Array<{
+    cardName: string;
+    role: SymbolicRole;
+    contribution: string;
+  }>;
+  /** Closing synthesis paragraph */
+  synthesis: string;
+  /** Full flowing narrative (Card Master voice) */
+  fullNarrative: string;
+  /** Mode-appropriate disclaimer */
+  disclaimer: string;
+  /** Card references for validation */
+  cardReferences: Record<string, string>;
+}
+
 /** Complete unified reading response */
 export interface UnifiedReadingResponse {
   mode: InterrogationMode;
@@ -527,6 +547,8 @@ export interface UnifiedReadingResponse {
   symbolicConfiguration: SymbolicConfiguration;
   lens: InterpretiveWeightVector;
   narrative: UnifiedNarrative;
+  /** Question-targeted narrative — Card Master voice */
+  questionNarrative: QuestionTargetedNarrative;
   verification: LTLVerification;
   personalization: UserProfileContext;
   qualityScore?: number;

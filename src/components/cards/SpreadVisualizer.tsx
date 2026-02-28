@@ -1,15 +1,17 @@
 import { motion } from 'framer-motion';
-import type { PlacedCard } from '../../types';
+import type { PlacedCard, SymbolicRole } from '../../types';
 import { TarotCardView } from './TarotCardView';
 
 interface SpreadVisualizerProps {
   spread: PlacedCard[];
   className?: string;
+  /** Map of card id → SymbolicRole for visual affordances */
+  roleMap?: Record<string, SymbolicRole>;
 }
 
-export function SpreadVisualizer({ spread, className = '' }: SpreadVisualizerProps) {
+export function SpreadVisualizer({ spread, className = '', roleMap }: SpreadVisualizerProps) {
   return (
-    <div className={`relative w-full aspect-[4/3] sm:aspect-[16/10] overflow-x-auto ${className}`}>
+    <div className={`relative w-full aspect-[4/3] sm:aspect-[16/10] ${className}`}>
       {spread.map((placed, i) => (
         <motion.div
           key={placed.card.id}
@@ -31,7 +33,12 @@ export function SpreadVisualizer({ spread, className = '' }: SpreadVisualizerPro
               {placed.position.label}
             </span>
           </div>
-          <TarotCardView card={placed.card} size="sm" showMeaning />
+          <TarotCardView
+            card={placed.card}
+            size="sm"
+            showMeaning
+            role={roleMap?.[placed.card.id]}
+          />
         </motion.div>
       ))}
     </div>
