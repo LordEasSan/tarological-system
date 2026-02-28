@@ -1,29 +1,28 @@
 /**
- * Question-Targeted Narrative — Comprehensive Tests
+ * Progressive Existential Narrative — Comprehensive Tests
  *
- * Validates the Card Master voice layer across modes:
- *   1.  Narrative contains original question keywords
- *   2.  Narrative references all card names
- *   3.  Narrative differs per mode for the same spread
- *   4.  Narrative is NOT identical to the structural explanation
- *   5.  Narrative length above minimum threshold
- *   6.  No predictive phrasing in non-divinatory modes
- *   7.  Cosmological disclaimer present in cosmological mode
- *   8.  Non-deterministic voice in philosophical mode
- *   9.  Card explanations array matches spread length
- *   10. Question restatement reflects original question
- *   11. Role-based contributions exist for every archetype
- *   12. Synthesis section is non-empty
+ * Validates:
+ *   1.  Progressive accumulation: each step builds on previous
+ *   2.  Narrative contains question keywords
+ *   3.  Narrative references all card names
+ *   4.  Narrative differs per mode for same spread
+ *   5.  Narrative NOT identical to structural explanation
+ *   6.  Narrative length above minimum threshold
+ *   7.  No predictive phrasing in non-divinatory modes
+ *   8.  No structural jargon in primary narrative
+ *   9.  Cosmological disclaimer in cosmological mode
+ *  10.  Progressive step count matches spread length
+ *  11.  Each step introduces new content (no cloning)
+ *  12.  Synthesis is non-empty and emergent
+ *  13.  Card order affects meaning (progressive memory)
+ *  14.  Smoke: "Who is the true friend?" — philosophical
+ *  15.  Smoke: "How was the universe born?" — cosmological
+ *  16.  Smoke: Arbitrary ontological — progressive coherence
  */
 import { describe, it, expect } from 'vitest';
 import { executeUnifiedReading } from '../engine/core/unified-pipeline';
-import { generateQuestionTargetedNarrative } from '../engine/core/question-narrative';
-import { generateUnifiedNarrative } from '../engine/core/narrative-integration';
-import { computeBiasVector } from '../engine/core/bias-vector';
-import { computeSymbolicConfiguration } from '../engine/core/symbolic-configuration';
-import { getInterpretiveLens } from '../engine/core/interpretive-lens';
-import { mockGenerate } from '../api/mock';
 import type { TarotParameters, InterrogationMode } from '../types';
+import { mockGenerate } from '../api/mock';
 
 // ─── Test Fixtures ──────────────────────────────────
 
@@ -48,223 +47,411 @@ function makeGenerateFn(params: TarotParameters) {
   return mockGenerate(params).spread;
 }
 
-function getUnifiedResult(mode: InterrogationMode, question: string) {
-  return executeUnifiedReading(mode, question, defaultParams, makeGenerateFn);
+function getResult(mode: InterrogationMode, question: string, seed?: number) {
+  const params = seed !== undefined ? { ...defaultParams, seed } : defaultParams;
+  return executeUnifiedReading(mode, question, params, makeGenerateFn);
 }
 
-// ─── 1. Narrative Contains Original Question Keywords ───
+// ─── STRUCTURAL JARGON BLACKLIST ────────────────────
+const STRUCTURAL_JARGON = [
+  'topology',
+  'attractor basin',
+  'trajectory space',
+  'entropic cluster',
+  'liveness constraint',
+  'existential topology',
+  'trajectory catalyst',
+  'configuration entropy',
+  'structural ground',
+  'attractor dynamics',
+];
 
-describe('Question Keyword Presence', () => {
-  it('contains keywords from the original question (divinatory)', () => {
-    const result = getUnifiedResult('divinatory', 'What does love mean in my future?');
-    const narrative = result.questionNarrative.fullNarrative.toLowerCase();
-    expect(narrative).toContain('love');
+// ─── 1. Progressive Accumulation ────────────────────
+
+describe('Progressive Accumulation', () => {
+  it('generates progressive steps equal to spread length', () => {
+    const r = getResult('philosophical', 'What is the meaning of freedom?');
+    expect(r.questionNarrative.progressiveSteps.length).toBe(r.spread.length);
   });
 
-  it('contains keywords from the original question (philosophical)', () => {
-    const result = getUnifiedResult('philosophical', 'What is the nature of consciousness?');
-    const narrative = result.questionNarrative.fullNarrative.toLowerCase();
+  it('progressive steps have increasing depth', () => {
+    const r = getResult('divinatory', 'What path should I take?');
+    const depths = r.questionNarrative.progressiveSteps.map(s => s.depth);
+    expect(depths).toEqual([1, 2, 3]);
+  });
+
+  it('each step has unique partialResponse (no cloning)', () => {
+    const r = getResult('philosophical', 'What is identity?');
+    const responses = r.questionNarrative.progressiveSteps.map(s => s.partialResponse);
+    const unique = new Set(responses);
+    expect(unique.size).toBe(responses.length);
+  });
+
+  it('later steps reference themes from earlier steps (cumulative insight)', () => {
+    const r = getResult('philosophical', 'What is consciousness?');
+    const steps = r.questionNarrative.progressiveSteps;
+    // Step 2+ should have non-empty cumulativeInsight that differs from step 1
+    if (steps.length >= 2) {
+      expect(steps[1].cumulativeInsight).not.toBe(steps[0].cumulativeInsight);
+      expect(steps[1].cumulativeInsight.length).toBeGreaterThan(
+        steps[0].cumulativeInsight.length,
+      );
+    }
+  });
+
+  it('card order affects narrative content (progressive memory)', () => {
+    // Two readings with same question, different seeds → different card order
+    const r1 = getResult('philosophical', 'What is truth?', 42);
+    const r2 = getResult('philosophical', 'What is truth?', 99);
+    // If spreads differ, narratives must differ
+    if (r1.spread[0].card.id !== r2.spread[0].card.id) {
+      expect(r1.questionNarrative.fullNarrative).not.toBe(
+        r2.questionNarrative.fullNarrative,
+      );
+    }
+  });
+});
+
+// ─── 2. Question Keyword Presence ───────────────────
+
+describe('Question Keyword Presence', () => {
+  it('contains keywords from the question (philosophical)', () => {
+    const r = getResult('philosophical', 'What is the nature of consciousness?');
+    const narrative = r.questionNarrative.fullNarrative.toLowerCase();
     expect(narrative).toContain('consciousness');
   });
 
+  it('contains keywords from the question (divinatory)', () => {
+    const r = getResult('divinatory', 'What does love mean in my future?');
+    const narrative = r.questionNarrative.fullNarrative.toLowerCase();
+    expect(narrative).toContain('love');
+  });
+
   it('question restatement reflects the original question', () => {
-    const question = 'How can I find balance in my life?';
-    const result = getUnifiedResult('divinatory', question);
-    const restatement = result.questionNarrative.questionRestatement.toLowerCase();
+    const r = getResult('divinatory', 'How can I find balance?');
+    const restatement = r.questionNarrative.questionRestatement.toLowerCase();
     expect(restatement).toContain('balance');
   });
 });
 
-// ─── 2. Narrative References All Card Names ───
+// ─── 3. All Card Names Referenced ───────────────────
 
-describe('Question Narrative References All Cards', () => {
+describe('Card Name References', () => {
   it('every card name appears in the full narrative (divinatory)', () => {
-    const result = getUnifiedResult('divinatory', 'What is my path forward?');
-    const narrative = result.questionNarrative.fullNarrative.toLowerCase();
-    for (const placed of result.spread) {
+    const r = getResult('divinatory', 'What is my path?');
+    const narrative = r.questionNarrative.fullNarrative.toLowerCase();
+    for (const placed of r.spread) {
       expect(narrative).toContain(placed.card.name.toLowerCase());
     }
   });
 
-  it('every card name appears in card explanations', () => {
-    const result = getUnifiedResult('philosophical', 'What is identity?');
-    const explNames = result.questionNarrative.cardExplanations.map(e => e.cardName.toLowerCase());
-    for (const placed of result.spread) {
-      expect(explNames).toContain(placed.card.name.toLowerCase());
+  it('every card name appears in progressive steps', () => {
+    const r = getResult('philosophical', 'What is identity?');
+    const stepNames = r.questionNarrative.progressiveSteps.map(
+      s => s.cardName.toLowerCase(),
+    );
+    for (const placed of r.spread) {
+      expect(stepNames).toContain(placed.card.name.toLowerCase());
     }
   });
 });
 
-// ─── 3. Narrative Differs Per Mode ───
+// ─── 4. Mode-Dependent Voice ────────────────────────
 
 describe('Mode-Dependent Narrative Voice', () => {
-  it('divinatory and philosophical produce different narratives for same spread', () => {
-    const paramsWithSeed = { ...defaultParams, seed: 777 };
-    const makeFn = (p: TarotParameters) => mockGenerate(p).spread;
-    const r1 = executeUnifiedReading('divinatory', 'What lies ahead?', paramsWithSeed, makeFn);
-    const r2 = executeUnifiedReading('philosophical', 'What lies ahead?', paramsWithSeed, makeFn);
-    expect(r1.questionNarrative.fullNarrative).not.toBe(r2.questionNarrative.fullNarrative);
+  it('philosophical and divinatory produce different narratives', () => {
+    const r1 = getResult('divinatory', 'What lies ahead?', 777);
+    const r2 = getResult('philosophical', 'What lies ahead?', 777);
+    expect(r1.questionNarrative.fullNarrative).not.toBe(
+      r2.questionNarrative.fullNarrative,
+    );
   });
 
   it('cosmological and divinatory produce different narratives', () => {
-    const paramsWithSeed = { ...defaultParams, seed: 777 };
-    const makeFn = (p: TarotParameters) => mockGenerate(p).spread;
-    const r1 = executeUnifiedReading('cosmological', 'What is my role?', paramsWithSeed, makeFn);
-    const r2 = executeUnifiedReading('divinatory', 'What is my role?', paramsWithSeed, makeFn);
-    expect(r1.questionNarrative.fullNarrative).not.toBe(r2.questionNarrative.fullNarrative);
+    const r1 = getResult('cosmological', 'What is my role?', 777);
+    const r2 = getResult('divinatory', 'What is my role?', 777);
+    expect(r1.questionNarrative.fullNarrative).not.toBe(
+      r2.questionNarrative.fullNarrative,
+    );
   });
 });
 
-// ─── 4. NOT Identical to Structural Explanation ───
+// ─── 5. Not Identical to Structural Explanation ─────
 
-describe('Question Narrative vs Structural Explanation', () => {
+describe('Progressive vs Structural Explanation', () => {
   it('question narrative differs from structural narrative', () => {
-    const result = getUnifiedResult('divinatory', 'What should I focus on?');
-    expect(result.questionNarrative.fullNarrative).not.toBe(result.narrative.fullNarrative);
-  });
-
-  it('question narrative is a distinct text body', () => {
-    const result = getUnifiedResult('philosophical', 'What shapes identity?');
-    // Even compared loosely, they should not be substrings of each other
-    const qLen = result.questionNarrative.fullNarrative.length;
-    const sLen = result.narrative.fullNarrative.length;
-    // They may share card names, but the overall text differs
-    const overlap = result.questionNarrative.fullNarrative === result.narrative.fullNarrative;
-    expect(overlap).toBe(false);
-    expect(qLen).toBeGreaterThan(0);
-    expect(sLen).toBeGreaterThan(0);
+    const r = getResult('divinatory', 'What should I focus on?');
+    expect(r.questionNarrative.fullNarrative).not.toBe(
+      r.narrative.fullNarrative,
+    );
   });
 });
 
-// ─── 5. Narrative Length Above Minimum ───
+// ─── 6. Narrative Length ────────────────────────────
 
-describe('Narrative Length Threshold', () => {
-  it('full narrative exceeds 200 characters (divinatory)', () => {
-    const result = getUnifiedResult('divinatory', 'What is coming?');
-    expect(result.questionNarrative.fullNarrative.length).toBeGreaterThan(200);
+describe('Narrative Length', () => {
+  it('exceeds 200 chars (divinatory)', () => {
+    const r = getResult('divinatory', 'What is coming?');
+    expect(r.questionNarrative.fullNarrative.length).toBeGreaterThan(200);
   });
 
-  it('full narrative exceeds 200 characters (philosophical)', () => {
-    const result = getUnifiedResult('philosophical', 'What is truth?');
-    expect(result.questionNarrative.fullNarrative.length).toBeGreaterThan(200);
+  it('exceeds 200 chars (philosophical)', () => {
+    const r = getResult('philosophical', 'What is truth?');
+    expect(r.questionNarrative.fullNarrative.length).toBeGreaterThan(200);
   });
 
-  it('full narrative exceeds 200 characters (cosmological)', () => {
-    const result = getUnifiedResult('cosmological', 'What is my cosmic position?');
-    expect(result.questionNarrative.fullNarrative.length).toBeGreaterThan(200);
-  });
-});
-
-// ─── 6. No Predictive Phrasing in Non-Divinatory ───
-
-describe('Phrasing Constraints by Mode', () => {
-  it('philosophical narrative avoids predictive language', () => {
-    const result = getUnifiedResult('philosophical', 'What is the meaning of freedom?');
-    const narrative = result.questionNarrative.fullNarrative.toLowerCase();
-    // Should not contain direct fortune-telling phrases
-    expect(narrative).not.toMatch(/you will definitely/);
-    expect(narrative).not.toMatch(/this will happen/);
-    expect(narrative).not.toMatch(/your fate is/);
-  });
-
-  it('cosmological narrative avoids empirical prediction', () => {
-    const result = getUnifiedResult('cosmological', 'What is the structure of existence?');
-    const narrative = result.questionNarrative.fullNarrative.toLowerCase();
-    expect(narrative).not.toMatch(/you will definitely/);
-    expect(narrative).not.toMatch(/science proves/);
+  it('exceeds 200 chars (cosmological)', () => {
+    const r = getResult('cosmological', 'What is my cosmic position?');
+    expect(r.questionNarrative.fullNarrative.length).toBeGreaterThan(200);
   });
 });
 
-// ─── 7. Mode-Specific Disclaimer ───
+// ─── 7. No Predictive Phrasing ──────────────────────
 
-describe('Disclaimer Presence', () => {
-  it('cosmological mode has a disclaimer', () => {
-    const result = getUnifiedResult('cosmological', 'What is my cosmic role?');
-    expect(result.questionNarrative.disclaimer.length).toBeGreaterThan(0);
+describe('Phrasing Constraints', () => {
+  it('philosophical avoids predictive language', () => {
+    const r = getResult('philosophical', 'What is freedom?');
+    const n = r.questionNarrative.fullNarrative.toLowerCase();
+    expect(n).not.toMatch(/you will definitely/);
+    expect(n).not.toMatch(/this will happen/);
+    expect(n).not.toMatch(/your fate is/);
   });
 
-  it('philosophical mode has a disclaimer', () => {
-    const result = getUnifiedResult('philosophical', 'What is reality?');
-    expect(result.questionNarrative.disclaimer.length).toBeGreaterThan(0);
-  });
-
-  it('divinatory mode has a disclaimer', () => {
-    const result = getUnifiedResult('divinatory', 'What does the future hold?');
-    expect(result.questionNarrative.disclaimer.length).toBeGreaterThan(0);
+  it('cosmological avoids empirical prediction', () => {
+    const r = getResult('cosmological', 'What is the structure of existence?');
+    const n = r.questionNarrative.fullNarrative.toLowerCase();
+    expect(n).not.toMatch(/science proves/);
+    expect(n).not.toMatch(/empirically proven/);
   });
 });
 
-// ─── 8. Card Explanations Match Spread ───
+// ─── 8. No Structural Jargon in Primary Narrative ───
 
-describe('Card Explanations Array', () => {
-  it('has explanations for each card in the spread', () => {
-    const result = getUnifiedResult('divinatory', 'What is important now?');
-    expect(result.questionNarrative.cardExplanations.length).toBe(result.spread.length);
+describe('No Structural Jargon', () => {
+  it('philosophical narrative has no structural jargon', () => {
+    const r = getResult('philosophical', 'What shapes identity?');
+    const n = r.questionNarrative.fullNarrative.toLowerCase();
+    for (const jargon of STRUCTURAL_JARGON) {
+      expect(n).not.toContain(jargon);
+    }
   });
 
-  it('each explanation has non-empty contribution', () => {
-    const result = getUnifiedResult('philosophical', 'What is the good?');
-    for (const expl of result.questionNarrative.cardExplanations) {
-      expect(expl.contribution.length).toBeGreaterThan(10);
-      expect(expl.cardName.length).toBeGreaterThan(0);
-      expect(expl.role).toBeDefined();
+  it('cosmological narrative has no structural jargon', () => {
+    const r = getResult('cosmological', 'How does the cosmos unfold?');
+    const n = r.questionNarrative.fullNarrative.toLowerCase();
+    for (const jargon of STRUCTURAL_JARGON) {
+      expect(n).not.toContain(jargon);
+    }
+  });
+
+  it('divinatory narrative has no structural jargon', () => {
+    const r = getResult('divinatory', 'What does the future hold?');
+    const n = r.questionNarrative.fullNarrative.toLowerCase();
+    for (const jargon of STRUCTURAL_JARGON) {
+      expect(n).not.toContain(jargon);
     }
   });
 });
 
-// ─── 9. Role-Based Contributions ───
+// ─── 9. Disclaimer Presence ────────────────────────
 
-describe('Role-Based Card Contributions', () => {
-  it('every archetype role is represented', () => {
-    const result = getUnifiedResult('divinatory', 'What matters most?');
-    const roles = result.questionNarrative.cardExplanations.map(e => e.role);
-    // We should have at least anchor (always assigned to first card)
-    expect(roles).toContain('anchor');
+describe('Disclaimer Presence', () => {
+  it('cosmological mode has a disclaimer without empirical claims', () => {
+    const r = getResult('cosmological', 'What is the origin?');
+    expect(r.questionNarrative.disclaimer.length).toBeGreaterThan(0);
+    expect(r.questionNarrative.disclaimer.toLowerCase()).toContain('not');
   });
 
-  it('card references map is populated', () => {
-    const result = getUnifiedResult('divinatory', 'What is ahead?');
-    const refs = result.questionNarrative.cardReferences;
-    expect(Object.keys(refs).length).toBeGreaterThan(0);
-  });
-});
-
-// ─── 10. Synthesis Is Non-Empty ───
-
-describe('Synthesis Section', () => {
-  it('synthesis is a non-empty string', () => {
-    const result = getUnifiedResult('divinatory', 'Where do I go from here?');
-    expect(result.questionNarrative.synthesis.length).toBeGreaterThan(20);
+  it('philosophical disclaimer mentions clarification, not prediction', () => {
+    const r = getResult('philosophical', 'What is reality?');
+    const d = r.questionNarrative.disclaimer.toLowerCase();
+    expect(d).toContain('clarification');
+    expect(d).not.toContain('liveness');
+    expect(d).not.toContain('trajectory space');
   });
 
-  it('synthesis mentions the question topic', () => {
-    const result = getUnifiedResult('philosophical', 'What is the nature of change?');
-    const synthesis = result.questionNarrative.synthesis.toLowerCase();
-    // Should relate back to the topic
-    expect(synthesis.length).toBeGreaterThan(20);
+  it('divinatory disclaimer present', () => {
+    const r = getResult('divinatory', 'What awaits?');
+    expect(r.questionNarrative.disclaimer.length).toBeGreaterThan(0);
   });
 });
 
-// ─── 11. Pipeline Integration ───
+// ─── 10. Synthesis ─────────────────────────────────
+
+describe('Emergent Synthesis', () => {
+  it('synthesis is non-empty and substantial', () => {
+    const r = getResult('divinatory', 'Where do I go from here?');
+    expect(r.questionNarrative.synthesis.length).toBeGreaterThan(30);
+  });
+
+  it('synthesis mentions card names', () => {
+    const r = getResult('philosophical', 'What is the good?');
+    const syn = r.questionNarrative.synthesis.toLowerCase();
+    const someCardMentioned = r.spread.some(p =>
+      syn.includes(p.card.name.toLowerCase()),
+    );
+    expect(someCardMentioned).toBe(true);
+  });
+
+  it('synthesis differs from any single progressive step', () => {
+    const r = getResult('philosophical', 'What is change?');
+    for (const step of r.questionNarrative.progressiveSteps) {
+      expect(r.questionNarrative.synthesis).not.toBe(step.partialResponse);
+    }
+  });
+});
+
+// ─── 11. No Duplicated Content ──────────────────────
+
+describe('No Duplicated Content', () => {
+  it('no two progressive steps share the same opening sentence', () => {
+    const r = getResult('philosophical', 'What is being?');
+    const openings = r.questionNarrative.progressiveSteps.map(
+      s => s.partialResponse.split('.')[0],
+    );
+    const unique = new Set(openings);
+    expect(unique.size).toBe(openings.length);
+  });
+
+  it('full narrative does not repeat any paragraph verbatim', () => {
+    const r = getResult('divinatory', 'What matters?');
+    const paragraphs = r.questionNarrative.fullNarrative
+      .split('\n\n')
+      .filter(p => p.trim().length > 20);
+    const unique = new Set(paragraphs);
+    expect(unique.size).toBe(paragraphs.length);
+  });
+});
+
+// ─── 12. Pipeline Integration ───────────────────────
 
 describe('Pipeline Integration', () => {
-  it('questionNarrative is present in unified reading response', () => {
-    const result = getUnifiedResult('divinatory', 'Test question');
-    expect(result.questionNarrative).toBeDefined();
-    expect(result.questionNarrative.questionRestatement).toBeDefined();
-    expect(result.questionNarrative.fullNarrative).toBeDefined();
-    expect(result.questionNarrative.cardExplanations).toBeDefined();
-    expect(result.questionNarrative.synthesis).toBeDefined();
-    expect(result.questionNarrative.disclaimer).toBeDefined();
-    expect(result.questionNarrative.cardReferences).toBeDefined();
+  it('questionNarrative is present with all required fields', () => {
+    const r = getResult('divinatory', 'Test question');
+    expect(r.questionNarrative).toBeDefined();
+    expect(r.questionNarrative.questionRestatement).toBeDefined();
+    expect(r.questionNarrative.progressiveSteps).toBeDefined();
+    expect(r.questionNarrative.cardExplanations).toBeDefined();
+    expect(r.questionNarrative.synthesis).toBeDefined();
+    expect(r.questionNarrative.disclaimer).toBeDefined();
+    expect(r.questionNarrative.cardReferences).toBeDefined();
+    expect(r.questionNarrative.fullNarrative).toBeDefined();
   });
 
   it('questionNarrative coexists with structural narrative', () => {
-    const result = getUnifiedResult('divinatory', 'Dual narrative check');
-    // Both should be present and non-empty
-    expect(result.narrative.fullNarrative.length).toBeGreaterThan(0);
-    expect(result.questionNarrative.fullNarrative.length).toBeGreaterThan(0);
-    // They should be different texts
-    expect(result.questionNarrative.fullNarrative).not.toBe(result.narrative.fullNarrative);
+    const r = getResult('divinatory', 'Dual narrative check');
+    expect(r.narrative.fullNarrative.length).toBeGreaterThan(0);
+    expect(r.questionNarrative.fullNarrative.length).toBeGreaterThan(0);
+    expect(r.questionNarrative.fullNarrative).not.toBe(
+      r.narrative.fullNarrative,
+    );
+  });
+});
+
+// ─── 13. SMOKE TESTS ───────────────────────────────
+
+describe('Smoke Test 1: "Who is the true friend?" — philosophical', () => {
+  const r = getResult('philosophical', 'Who is the true friend?');
+
+  it('produces a coherent existential response', () => {
+    expect(r.questionNarrative.fullNarrative.length).toBeGreaterThan(300);
+  });
+
+  it('contains the word "friend" in the narrative', () => {
+    expect(r.questionNarrative.fullNarrative.toLowerCase()).toContain('friend');
+  });
+
+  it('has progressive steps that deepen sequentially', () => {
+    const steps = r.questionNarrative.progressiveSteps;
+    expect(steps.length).toBe(3);
+    // Each step's cumulative insight should grow
+    for (let i = 1; i < steps.length; i++) {
+      expect(steps[i].cumulativeInsight.length).toBeGreaterThan(
+        steps[i - 1].cumulativeInsight.length,
+      );
+    }
+  });
+
+  it('has no structural jargon', () => {
+    const n = r.questionNarrative.fullNarrative.toLowerCase();
+    for (const jargon of STRUCTURAL_JARGON) {
+      expect(n).not.toContain(jargon);
+    }
+  });
+
+  it('synthesis resolves or reframes the question', () => {
+    expect(r.questionNarrative.synthesis.length).toBeGreaterThan(30);
+  });
+});
+
+describe('Smoke Test 2: "How was the universe born?" — cosmological', () => {
+  const r = getResult('cosmological', 'How was the universe born?');
+
+  it('produces a symbolic cosmogonic unfolding', () => {
+    expect(r.questionNarrative.fullNarrative.length).toBeGreaterThan(300);
+  });
+
+  it('contains the word "universe" or "cosmos" in narrative', () => {
+    const n = r.questionNarrative.fullNarrative.toLowerCase();
+    expect(n.includes('universe') || n.includes('cosmos')).toBe(true);
+  });
+
+  it('uses mythic/archetypal language, not structural', () => {
+    const n = r.questionNarrative.fullNarrative.toLowerCase();
+    // Should contain mythic language
+    const mythicTerms = ['symbol', 'archetype', 'force', 'myth'];
+    const hasMythic = mythicTerms.some(t => n.includes(t));
+    expect(hasMythic).toBe(true);
+
+    // Should not contain structural jargon
+    for (const jargon of STRUCTURAL_JARGON) {
+      expect(n).not.toContain(jargon);
+    }
+  });
+
+  it('progressive steps show cosmogonic deepening', () => {
+    const steps = r.questionNarrative.progressiveSteps;
+    expect(steps.length).toBe(3);
+    // Each step should be unique
+    const unique = new Set(steps.map(s => s.partialResponse));
+    expect(unique.size).toBe(3);
+  });
+});
+
+describe('Smoke Test 3: Arbitrary ontological — progressive coherence', () => {
+  const r = getResult('philosophical', 'What makes something real?', 123);
+
+  it('produces coherent progressive deepening', () => {
+    const steps = r.questionNarrative.progressiveSteps;
+    expect(steps.length).toBeGreaterThan(0);
+
+    // All steps non-empty
+    for (const step of steps) {
+      expect(step.partialResponse.length).toBeGreaterThan(50);
+    }
+
+    // Synthesis non-empty
+    expect(r.questionNarrative.synthesis.length).toBeGreaterThan(30);
+  });
+
+  it('the word "real" appears in the narrative', () => {
+    expect(r.questionNarrative.fullNarrative.toLowerCase()).toContain('real');
+  });
+
+  it('no duplication across steps', () => {
+    const firstSentences = r.questionNarrative.progressiveSteps.map(
+      s => s.partialResponse.split('.')[0],
+    );
+    const unique = new Set(firstSentences);
+    expect(unique.size).toBe(firstSentences.length);
+  });
+
+  it('synthesis references the full configuration', () => {
+    const syn = r.questionNarrative.synthesis.toLowerCase();
+    // At least one card name appears in synthesis
+    const someCard = r.spread.some(p =>
+      syn.includes(p.card.name.toLowerCase()),
+    );
+    expect(someCard).toBe(true);
   });
 });

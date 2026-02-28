@@ -518,10 +518,26 @@ export interface UnifiedNarrative {
   cardReferences: Record<string, string>;
 }
 
-/** Question-targeted narrative — Card Master voice addressing the question through cards */
+/** A single progressive accumulation step — one card's contribution to the emerging meaning */
+export interface ProgressiveStep {
+  /** 1-based depth in the progressive sequence */
+  depth: number;
+  /** Card name at this step */
+  cardName: string;
+  /** Symbolic role */
+  role: SymbolicRole;
+  /** The existential response generated at this step */
+  partialResponse: string;
+  /** Cumulative insight after this step (semantic summary, not repeated text) */
+  cumulativeInsight: string;
+}
+
+/** Question-targeted narrative — existential-hermeneutic voice addressing the question through cards */
 export interface QuestionTargetedNarrative {
   /** Question restated in interpretive form */
   questionRestatement: string;
+  /** Progressive accumulation steps — one per card, each building on the last */
+  progressiveSteps: ProgressiveStep[];
   /** Card-by-card woven explanation addressing the question */
   cardExplanations: Array<{
     cardName: string;
@@ -530,7 +546,7 @@ export interface QuestionTargetedNarrative {
   }>;
   /** Closing synthesis paragraph */
   synthesis: string;
-  /** Full flowing narrative (Card Master voice) */
+  /** Full flowing narrative (existential-hermeneutic voice) */
   fullNarrative: string;
   /** Mode-appropriate disclaimer */
   disclaimer: string;

@@ -616,63 +616,70 @@ function QuestionNarrativeView({ response }: { response: UnifiedReadingResponse 
           Your Question
         </p>
         <p className="text-lg font-medium dark:text-mtps-text text-mtps-text-light italic">
-          "{qn.questionRestatement}"
+          &ldquo;{qn.questionRestatement}&rdquo;
         </p>
       </div>
 
-      {/* Full Narrative — Card Master Voice */}
-      <div className="p-6 rounded-2xl border dark:border-mtps-border dark:bg-mtps-card/50 border-mtps-border-light bg-white">
-        <h3 className="text-lg font-bold dark:text-mtps-text text-mtps-text-light mb-4 flex items-center gap-2">
-          <MessageCircle className="w-5 h-5 dark:text-mtps-accent text-mtps-purple" />
-          Answer Through the Cards
-        </h3>
-        <div
-          className="prose prose-sm dark:prose-invert max-w-none
-            dark:prose-headings:text-mtps-text prose-headings:text-mtps-text-light
-            dark:prose-p:text-mtps-muted prose-p:text-mtps-muted
-            dark:prose-strong:text-mtps-silver prose-strong:text-mtps-text-light
-            dark:prose-em:text-mtps-accent prose-em:text-mtps-purple
-            dark:prose-hr:border-mtps-border prose-hr:border-mtps-border-light"
-          dangerouslySetInnerHTML={{ __html: renderMarkdown(qn.fullNarrative) }}
-        />
-      </div>
-
-      {/* Card-by-Card Contributions */}
-      <div className="p-6 rounded-2xl border dark:border-mtps-border dark:bg-mtps-card/50 border-mtps-border-light bg-white">
-        <h3 className="text-lg font-bold dark:text-mtps-text text-mtps-text-light mb-4">
-          Card Contributions
-        </h3>
-        <div className="space-y-4">
-          {qn.cardExplanations.map((card, i) => (
-            <div key={i} className="flex gap-3">
-              <div className="flex-shrink-0 mt-1">
-                <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium border
-                  ${ROLE_BADGE[card.role]}`}>
-                  {card.role}
+      {/* Progressive Unfolding — card-by-card emergence */}
+      <div className="space-y-4">
+        {qn.progressiveSteps.map((step, i) => (
+          <motion.div
+            key={step.cardName}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.15, duration: 0.4 }}
+            className="relative"
+          >
+            {/* Depth indicator line */}
+            {i < qn.progressiveSteps.length - 1 && (
+              <div className="absolute left-5 top-14 bottom-0 w-px dark:bg-mtps-border/40 bg-mtps-border-light/40" />
+            )}
+            <div className="flex gap-4">
+              {/* Step number + role badge */}
+              <div className="flex-shrink-0 flex flex-col items-center gap-1.5">
+                <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold
+                  dark:bg-mtps-card dark:border-mtps-border dark:text-mtps-silver
+                  bg-white border border-mtps-border-light text-mtps-text-light">
+                  {step.depth}
+                </div>
+                <span className={`inline-block px-1.5 py-0.5 rounded-full text-[10px] font-medium border
+                  ${ROLE_BADGE[step.role]}`}>
+                  {step.role}
                 </span>
               </div>
-              <div>
-                <p className="text-sm font-semibold dark:text-mtps-text text-mtps-text-light mb-1">
-                  {card.cardName}
+              {/* Progressive response */}
+              <div className="flex-1 p-5 rounded-2xl border dark:border-mtps-border dark:bg-mtps-card/50
+                border-mtps-border-light bg-white">
+                <p className="text-xs font-semibold uppercase tracking-wider dark:text-mtps-silver text-mtps-text-light mb-2">
+                  {step.cardName}
                 </p>
-                <p className="text-sm dark:text-mtps-muted text-mtps-muted leading-relaxed">
-                  {card.contribution}
-                </p>
+                <div
+                  className="prose prose-sm dark:prose-invert max-w-none leading-relaxed
+                    dark:prose-p:text-mtps-muted prose-p:text-mtps-muted
+                    dark:prose-strong:text-mtps-silver prose-strong:text-mtps-text-light
+                    dark:prose-em:text-mtps-accent prose-em:text-mtps-purple"
+                  dangerouslySetInnerHTML={{ __html: renderMarkdown(step.partialResponse) }}
+                />
               </div>
             </div>
-          ))}
-        </div>
+          </motion.div>
+        ))}
       </div>
 
       {/* Synthesis */}
-      <div className="p-5 rounded-2xl border dark:border-mtps-border dark:bg-mtps-deep/40
-        border-mtps-border-light bg-gray-50">
-        <h3 className="text-sm font-bold dark:text-mtps-silver text-mtps-text-light mb-2 uppercase tracking-wider">
-          Synthesis
+      <div className="p-5 rounded-2xl border dark:border-mtps-accent/20 dark:bg-mtps-deep/40
+        border-mtps-purple/20 bg-gray-50">
+        <h3 className="text-sm font-bold dark:text-mtps-accent text-mtps-purple mb-3 uppercase tracking-wider flex items-center gap-2">
+          <Compass className="w-4 h-4" />
+          Emergent Synthesis
         </h3>
-        <p className="text-sm dark:text-mtps-muted text-mtps-muted leading-relaxed">
-          {qn.synthesis}
-        </p>
+        <div
+          className="prose prose-sm dark:prose-invert max-w-none leading-relaxed
+            dark:prose-p:text-mtps-muted prose-p:text-mtps-muted
+            dark:prose-strong:text-mtps-silver prose-strong:text-mtps-text-light
+            dark:prose-em:text-mtps-accent prose-em:text-mtps-purple"
+          dangerouslySetInnerHTML={{ __html: renderMarkdown(qn.synthesis) }}
+        />
       </div>
 
       {/* Disclaimer */}
