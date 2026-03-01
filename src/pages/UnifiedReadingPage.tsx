@@ -5,6 +5,7 @@ import {
   BookOpen, Brain, Orbit, Grid3X3, FileText, Compass,
   ArrowRight, RefreshCcw, Zap, MessageCircle,
   ChevronDown, ChevronUp, GitBranch, Flame, Activity,
+  Settings, Globe,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
@@ -22,6 +23,7 @@ import type {
   UserProfileContext,
   SymbolicRole,
   QuestionTargetedNarrative,
+  NarrativeLanguage,
 } from '../types';
 
 // ─── Mode Configuration ─────────────────────────────
@@ -100,7 +102,7 @@ const VIEW_TABS: { id: ViewTab; label: string; icon: typeof Eye }[] = [
 // ─── Component ──────────────────────────────────────
 
 export function UnifiedReadingPage() {
-  const { state } = useApp();
+  const { state, dispatch } = useApp();
   const navigate = useNavigate();
   const isSymbolicMode = state.readingMode === 'symbolic';
   const [mode, setMode] = useState<InterrogationMode>(state.interrogationMode);
@@ -110,6 +112,11 @@ export function UnifiedReadingPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [view, setView] = useState<ViewTab>('narrative');
   const [personalization] = useState<Partial<UserProfileContext>>({});
+  const narrativeLanguage = state.narrativeLanguage;
+
+  const setNarrativeLanguage = (lang: NarrativeLanguage) => {
+    dispatch({ type: 'SET_NARRATIVE_LANGUAGE', payload: lang });
+  };
 
   const handleGenerate = useCallback(() => {
     if (isProcessing) return;
@@ -128,15 +135,15 @@ export function UnifiedReadingPage() {
       );
       setResponse(result);
 
-      // Generate symbolic narrative when in symbolic mode
+      // Generate symbolic narrative with D-score modulation and language
       if (isSymbolicMode) {
         try {
           const qScore = computeQualityScore(result.spread, state.parameters);
-          const narrative = generateSymbolicNarrative(result, qScore.dimensions);
+          const narrative = generateSymbolicNarrative(result, qScore.dimensions, narrativeLanguage);
           setSymbolicNarrative(narrative);
         } catch {
           // Fallback: generate without D-score modulation
-          const narrative = generateSymbolicNarrative(result);
+          const narrative = generateSymbolicNarrative(result, undefined, narrativeLanguage);
           setSymbolicNarrative(narrative);
         }
       }
@@ -144,7 +151,7 @@ export function UnifiedReadingPage() {
       setIsProcessing(false);
       setView('narrative');
     }, 500);
-  }, [mode, question, state.parameters, isProcessing, personalization, isSymbolicMode]);
+  }, [mode, question, state.parameters, isProcessing, personalization, isSymbolicMode, narrativeLanguage]);
 
   const handleReinterpret = useCallback((newMode: InterrogationMode) => {
     if (!response) return;
@@ -175,12 +182,7 @@ export function UnifiedReadingPage() {
   const modeConfig = MODE_CONFIG[mode];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8"
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">6"
       >
         <div>
           <h1 className="font-display text-3xl font-bold gradient-text flex items-center gap-2">
@@ -191,15 +193,82 @@ export function UnifiedReadingPage() {
             Symbolic-first epistemology · Cards are the generative engine · Question constrains interpretation
           </p>
         </div>
-        <button
-          onClick={() => navigate('/')}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm
-            dark:bg-mtps-card dark:text-mtps-silver dark:hover:bg-mtps-purple/40
-            bg-white text-mtps-text-light hover:bg-mtps-border-light
-            border dark:border-mtps-border border-mtps-border-light transition-all"
-        >
-          <RotateCcw className="w-4 h-4" /> Home
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => navigate('/configure')}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm
+              dark:bg-mtps-card dark:text-mtps-silver dark:hover:bg-mtps-purple/40
+              bg-white text-mtps-text-light hover:bg-mtps-border-light
+              border dark:border-mtps-border border-mtps-border-light transition-all"
+          >
+            <Settings className="w-4 h-4" /> Reconfigure
+          </button>
+          <button
+            onClick={() => navigate('/')}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm
+              dark:bg-mtps-card dark:text-mtps-silver dark:hover:bg-mtps-purple/40
+              bg-white text-mtps-text-light hover:bg-mtps-border-light
+              border dark:border-mtps-border border-mtps-border-light transition-all"
+          >
+            <RotateCcw className="w-4 h-4" /> Home
+          </button>
+        </div>
+      </motion.div>
+
+      {/* ─── Configuration Summary + Language Selector ─── */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.05 }}
+        className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6
+          p-3 rounded-xl border dark:border-mtps-border/40 dark:bg-mtps-card/30
+          border-mtps-border-light/40 bg-white/60"
+        data-testid="config-summary-bar"
+      >
+        <div className="flex flex-wrap items-center gap-2 text-xs dark:text-mtps-muted text-mtps-muted">
+          <span className="font-semibold dark:text-mtps-silver text-mtps-text-light uppercase tracking-wider text-[10px]">θ</span>
+          <span className="px-2 py-0.5 rounded-full dark:bg-mtps-deep/60 bg-gray-100 dark:text-mtps-accent text-mtps-purple">
+            {state.parameters.archetypeFamily}
+          </span>
+          <span className="px-2 py-0.5 rounded-full dark:bg-mtps-deep/60 bg-gray-100">
+            {state.parameters.deckSize} cards
+          </span>
+          <span className="px-2 py-0.5 rounded-full dark:bg-mtps-deep/60 bg-gray-100">
+            {state.parameters.spreadType}
+          </span>
+          <span className="px-2 py-0.5 rounded-full dark:bg-mtps-deep/60 bg-gray-100">
+            {state.parameters.narrativeStyle}
+          </span>
+          {state.parameters.reversalsEnabled && (
+            <span className="px-2 py-0.5 rounded-full dark:bg-mtps-deep/60 bg-gray-100">
+              ↺ reversals
+            </span>
+          )}
+        </div>
+        {/* Language Selector */}
+        <div data-testid="language-selector" className="flex items-center gap-1.5">
+          <Globe className="w-3.5 h-3.5 dark:text-mtps-muted/60 text-mtps-muted/50" />
+          <button
+            onClick={() => setNarrativeLanguage('en')}
+            className={`px-2 py-0.5 rounded-full text-[11px] font-medium border transition-all
+              ${narrativeLanguage === 'en'
+                ? 'dark:border-mtps-accent dark:bg-mtps-accent/15 dark:text-mtps-accent border-mtps-purple bg-mtps-purple/10 text-mtps-purple'
+                : 'dark:border-mtps-border dark:text-mtps-muted border-mtps-border-light text-mtps-muted hover:opacity-80'
+              }`}
+          >
+            EN
+          </button>
+          <button
+            onClick={() => setNarrativeLanguage('it')}
+            className={`px-2 py-0.5 rounded-full text-[11px] font-medium border transition-all
+              ${narrativeLanguage === 'it'
+                ? 'dark:border-mtps-accent dark:bg-mtps-accent/15 dark:text-mtps-accent border-mtps-purple bg-mtps-purple/10 text-mtps-purple'
+                : 'dark:border-mtps-border dark:text-mtps-muted border-mtps-border-light text-mtps-muted hover:opacity-80'
+              }`}
+          >
+            IT
+          </button>
+        </div>
       </motion.div>
 
       {/* Mode Selector — selectable BEFORE reading */}
@@ -1212,6 +1281,34 @@ function SymbolicReadingView({
                   ${ROLE_BADGE[step?.role] || 'dark:bg-mtps-card/50 dark:text-mtps-muted dark:border-mtps-border bg-gray-100 text-gray-600 border-gray-200'}`}>
                   {step?.role}
                 </span>
+
+      {/* ─── Direct Insight ─── */}
+      {narrative.directInsight && (
+        <>
+          <div className="flex items-center gap-3 sm:gap-4 mb-8 sm:mb-10">
+            <div className="flex-1 h-px dark:bg-emerald-500/30 bg-emerald-400/30" />
+            <Zap className="w-4 h-4 dark:text-emerald-400/60 text-emerald-600/60" />
+            <div className="flex-1 h-px dark:bg-emerald-500/30 bg-emerald-400/30" />
+          </div>
+
+          <motion.section
+            data-testid="direct-insight"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.7, duration: 0.6 }}
+            className="mb-10 sm:mb-12 px-4 sm:px-6 py-4 sm:py-5 rounded-2xl border-2
+              dark:border-emerald-500/30 dark:bg-emerald-500/5
+              border-emerald-400/30 bg-emerald-50/30"
+          >
+            <h3 className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.2em] dark:text-emerald-400 text-emerald-700 mb-3 sm:mb-4">
+              Direct Insight
+            </h3>
+            <div className="text-[14px] sm:text-[15px] dark:text-emerald-100/80 text-emerald-900/80 font-serif leading-[1.9]">
+              {renderNarrative(narrative.directInsight)}
+            </div>
+          </motion.section>
+        </>
+      )}
                 {qn.tensionType && (
                   <span className="inline-block px-1.5 py-0.5 rounded-full text-[10px] font-medium border
                     dark:bg-rose-500/15 dark:text-rose-300 dark:border-rose-500/25

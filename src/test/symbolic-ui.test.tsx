@@ -352,3 +352,111 @@ describe('SymbolicReadingView — Narrative Quality', () => {
     }
   });
 });
+// ─── 8. Direct Insight in Narrative ─────────────────
+
+describe('SymbolicReadingView — Direct Insight', () => {
+  it('generateSymbolicNarrative returns directInsight field', () => {
+    const { narrative } = makeNarrative(42);
+    expect(narrative).toHaveProperty('directInsight');
+    expect(typeof narrative.directInsight).toBe('string');
+    expect(narrative.directInsight.length).toBeGreaterThan(20);
+  });
+
+  it('directInsight references anchor card name', () => {
+    const { narrative, response } = makeNarrative(42);
+    const steps = response.questionNarrative.transformationSteps;
+    const anchorStep = steps.find(s => s.role === 'anchor') ?? steps[0];
+    expect(narrative.directInsight).toContain(anchorStep.cardName);
+  });
+
+  it('directInsight is deterministic for same seed', () => {
+    const { narrative: n1 } = makeNarrative(42);
+    const { narrative: n2 } = makeNarrative(42);
+    expect(n1.directInsight).toBe(n2.directInsight);
+  });
+});
+
+// ─── 9. Config Summary Bar (source check) ──────────
+
+describe('SymbolicReadingView — Config Summary Bar', () => {
+  it('source contains config-summary-bar test id', async () => {
+    const fs = await import('fs');
+    const src = fs.readFileSync('src/pages/UnifiedReadingPage.tsx', 'utf-8');
+    expect(src).toContain('data-testid="config-summary-bar"');
+  });
+
+  it('config summary bar shows θ parameter labels', async () => {
+    const fs = await import('fs');
+    const src = fs.readFileSync('src/pages/UnifiedReadingPage.tsx', 'utf-8');
+    expect(src).toContain('archetypeFamily');
+    expect(src).toContain('deckSize');
+    expect(src).toContain('spreadType');
+    expect(src).toContain('narrativeStyle');
+    expect(src).toContain('reversalsEnabled');
+  });
+
+  it('Reconfigure button navigates to /configure', async () => {
+    const fs = await import('fs');
+    const src = fs.readFileSync('src/pages/UnifiedReadingPage.tsx', 'utf-8');
+    expect(src).toContain("navigate('/configure')");
+    expect(src).toContain('Reconfigure');
+  });
+});
+
+// ─── 10. Language Selector (source check) ───────────
+
+describe('SymbolicReadingView — Language Selector', () => {
+  it('source contains language-selector test id', async () => {
+    const fs = await import('fs');
+    const src = fs.readFileSync('src/pages/UnifiedReadingPage.tsx', 'utf-8');
+    expect(src).toContain('data-testid="language-selector"');
+  });
+
+  it('language selector has EN and IT toggle buttons', async () => {
+    const fs = await import('fs');
+    const src = fs.readFileSync('src/pages/UnifiedReadingPage.tsx', 'utf-8');
+    // EN and IT buttons with click handlers
+    expect(src).toContain("setNarrativeLanguage('en')");
+    expect(src).toContain("setNarrativeLanguage('it')");
+    expect(src).toContain('EN');
+    expect(src).toContain('IT');
+  });
+
+  it('language selector uses Globe icon', async () => {
+    const fs = await import('fs');
+    const src = fs.readFileSync('src/pages/UnifiedReadingPage.tsx', 'utf-8');
+    expect(src).toContain('Globe');
+  });
+
+  it('narrativeLanguage is passed to generateSymbolicNarrative', async () => {
+    const fs = await import('fs');
+    const src = fs.readFileSync('src/pages/UnifiedReadingPage.tsx', 'utf-8');
+    expect(src).toContain('narrativeLanguage');
+    // generateSymbolicNarrative receives narrativeLanguage parameter
+    expect(src).toContain('generateSymbolicNarrative(result');
+    expect(src).toContain('narrativeLanguage)');
+  });
+});
+
+// ─── 11. Direct Insight Section (source check) ─────
+
+describe('SymbolicReadingView — Direct Insight Section', () => {
+  it('source contains direct-insight test id', async () => {
+    const fs = await import('fs');
+    const src = fs.readFileSync('src/pages/UnifiedReadingPage.tsx', 'utf-8');
+    expect(src).toContain('data-testid="direct-insight"');
+  });
+
+  it('direct insight section uses emerald color scheme', async () => {
+    const fs = await import('fs');
+    const src = fs.readFileSync('src/pages/UnifiedReadingPage.tsx', 'utf-8');
+    expect(src).toContain('dark:border-emerald-500/30');
+    expect(src).toContain('dark:bg-emerald-500/5');
+  });
+
+  it('direct insight section renders narrative.directInsight', async () => {
+    const fs = await import('fs');
+    const src = fs.readFileSync('src/pages/UnifiedReadingPage.tsx', 'utf-8');
+    expect(src).toContain('narrative.directInsight');
+  });
+});

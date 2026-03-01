@@ -20,6 +20,7 @@ import type {
   ResolutionArchetype,
   TransformationStep,
   PlacedCard,
+  NarrativeLanguage,
 } from '../types';
 import type { DimensionScore } from './scoring';
 
@@ -34,6 +35,8 @@ export interface SymbolicNarrative {
   synthesis: string;
   /** Symbolic closure — archetypally embodied, never didactic */
   resolution: string;
+  /** Direct insight — concrete, question-answering conclusion */
+  directInsight: string;
 }
 
 // ─── Rhythm Engine ──────────────────────────────────
@@ -268,6 +271,209 @@ const STRATEGY_TERMINAL: Record<CompletionStrategy, string> = {
   destabilize_further: 'Still open. Still moving. This is not the end.',
 };
 
+// ─── Italian Translation Maps ───────────────────────
+
+const TENSION_OPENING_IT: Record<TensionType, string> = {
+  polarity: 'Due forze occupano lo stesso terreno. Nessuna cede.\nLa domanda non si pone tra di esse — *è* la distanza stessa.',
+  hierarchy: 'Una voce qui parla più forte delle altre. Non per diritto.\nPer peso. Le altre non sono state messe a tacere — sono state compresse.',
+  illusion: 'La prima cosa che le carte mostrano non è ciò che significano.\nUna superficie, convincente. Sotto di essa, una lettura completamente diversa.',
+  excess: 'Troppo. La stesa si piega ai propri bordi.\nQualcosa qui ha superato gli argini — e la piena trascina il significato con sé.',
+  absence: 'C\'è un silenzio in questa stesa.\nNon vuoto — scavato. Qualcosa che dovrebbe essere qui si è ritirato, e le carte rimaste si inclinano verso la lacuna.',
+  sacrifice: 'La stesa si organizza attorno a una ferita.\nNon accidentale. Deliberata. Qualcosa è stato posto sull\'altare — o sta per esserlo.',
+  identity_split: 'Due letture coesistono nella stessa stesa.\nNon possono essere entrambe vere. Eppure lo sono.',
+  creation_destruction: 'Qualcosa sta nascendo qui.\nE qualcosa sta morendo esattamente alla stessa velocità. Le carte non separano le due cose — insistono sulla simultaneità.',
+};
+
+const TENSION_CONNECTOR_IT: Record<TensionType, string[]> = {
+  polarity: ['Contro questo —', 'Il contrappeso:', 'Dal polo opposto,'],
+  hierarchy: ['Sotto quel dominio,', 'All\'ombra di quel peso,', 'Subordinato ma presente,'],
+  illusion: ['Ma guarda più da vicino.', 'Dietro questa apparenza,', 'Ciò che mostra realmente:'],
+  excess: ['Ancora di più.', 'Aggiunto a questo eccesso,', 'Accumulando il surplus,'],
+  absence: ['In quel vuoto,', 'Dove il vuoto attira,', 'Verso il centro mancante,'],
+  sacrifice: ['Offerto dopo:', 'Il prezzo continua.', 'Posto accanto alla prima offerta,'],
+  identity_split: ['Ma l\'altro sé dice —', 'Al di là della scissione,', 'Lo specchio risponde:'],
+  creation_destruction: ['Nato da quella distruzione,', 'Alla stessa soglia,', 'Dove l\'emergere incontra la dissoluzione,'],
+};
+
+const STRATEGY_MOVEMENT_IT: Record<CompletionStrategy, StrategyMovement> = {
+  integrate: {
+    escalation: [
+      'I primi termini di una coalizione.',
+      'Il contenimento si approfondisce — ciò che sembrava incompatibile inizia a coabitare.',
+      'E ora l\'integrazione è completa: non fusione, ma coesistenza sotto pressione.',
+    ],
+    kinesis: 'La stesa si raccoglie. Non eliminando la differenza, ma ampliando ciò che può essere tenuto insieme.',
+  },
+  sever: {
+    escalation: [
+      'La lama è visibile.',
+      'Il taglio si approfondisce. Ciò che sembrava continuo rivela una linea di frattura.',
+      'La separazione è completa. Netta. Ciò che resta appartiene a ciò che resta.',
+    ],
+    kinesis: 'Qualcosa qui deve essere rimosso. Non negoziato — asportato.',
+  },
+  expose: {
+    escalation: [
+      'Un primo strato si stacca.',
+      'Più in profondità. Ciò che si credeva solido si rivela uno schermo.',
+      'Completamente visibile. Nudo. Ciò che era nascosto non ha più dove nascondersi.',
+    ],
+    kinesis: 'La stesa si muove verso la nudità. Strato dopo strato, il mascheramento si dissolve.',
+  },
+  collapse: {
+    escalation: [
+      'La prima frattura appare.',
+      'La struttura cede. Ciò che reggeva inizia a cedere.',
+      'Crolla. E nel cadere, rivela ciò che era portante.',
+    ],
+    kinesis: 'Ciò che è stato sostenuto oltre il suo tempo ora cede. Una demolizione controllata.',
+  },
+  demand: {
+    escalation: [
+      'Un\'esigenza viene posta.',
+      'La pressione aumenta. La lettura non la ammorbidirà.',
+      'L\'imperativo è ora assoluto. Nessuna ambiguità rimane.',
+    ],
+    kinesis: 'La pressione cresce attraverso la stesa. Ogni carta aggiunge peso a un\'unica esigenza.',
+  },
+  embody: {
+    escalation: [
+      'Entra nel corpo.',
+      'Più in profondità nella carne. Il simbolo diventa sensazione.',
+      'Completamente incarnato. Non più un concetto — un modo di essere nella stanza.',
+    ],
+    kinesis: 'La stesa scende dal pensiero al tessuto. Ogni carta radica il significato più in profondità.',
+  },
+  limit: {
+    escalation: [
+      'Un confine appare.',
+      'Il contenimento si stringe. Ciò che era disperso inizia a trovare i suoi bordi.',
+      'Il limite è tracciato. Chiaro, non negoziabile. Ciò che è dentro resta; ciò che è fuori resta.',
+    ],
+    kinesis: 'I bordi vengono tracciati. La lettura si contrae per trovare l\'essenziale.',
+  },
+  reverse: {
+    escalation: [
+      'La prima inversione.',
+      'Ciò che era dominante inizia a recedere. Ciò che era marginale sale.',
+      'La polarità si è completamente spostata. La lettura ora parla dall\'altro lato.',
+    ],
+    kinesis: 'Un capovolgimento attraversa la stesa. Ciò che sembrava fisso ruota sul proprio asse.',
+  },
+  destabilize_further: {
+    escalation: [
+      'Il terreno si sposta.',
+      'Ancora oltre. La rottura si approfondisce, e la lettura rifiuta di ristabilizzarsi.',
+      'Ancora aperto. Ancora in movimento. Le carte rifiutano la chiusura.',
+    ],
+    kinesis: 'La stabilità non è l\'obiettivo. La lettura spinge più in profondità nel sommovimento, fidandosi di ciò che non può ancora essere nominato.',
+  },
+};
+
+const RESOLUTION_CLOSURE_IT: Record<ResolutionArchetype, string> = {
+  paradox_as_ground: 'La contraddizione regge.\nNon come problema da risolvere, ma come il terreno stesso — il luogo dove la domanda vive senza necessità di risposta.\nDue verità. Una stesa. La tensione è il fondamento.',
+  irruptive_revelation: 'Qualcosa ha fatto irruzione.\nCiò che era compresso esplode — non gradualmente, non dolcemente. Il mascheramento era un recipiente sotto pressione, e ora la lettura si trova nel dopo della propria rivelazione.',
+  mythic_cosmogony: 'Una genesi.\nDal materiale grezzo di queste carte, una storia di origini si assembla. Non la memoria di ciò che era — l\'architettura di ciò che sta divenendo.\nIl primo giorno di un mondo che non esisteva prima di questa lettura.',
+  ethical_imperative: 'La lettura si consolida in un solo punto.\nNon consiglio. Non suggerimento. Qualcosa che non si piega, non si ammorbidisce, non aspetta.\nL\'esigenza resta. È rimasta in piedi da quando la prima carta è stata estratta.',
+  definitional_arrival: 'Un nome.\nCiò che era fluido si è cristallizzato. Ciò che rifiutava la definizione ora vi si sottomette — non per forza ma per accumulata precisione.\nLa parola è esatta. E una volta pronunciata, non può essere annullata.',
+  tragic_acceptance: 'Ciò che è perso resta perso.\nLa lettura non consola. Non offre significato come compensazione. Testimonia.\nDa quella testimonianza — non malgrado la perdita ma attraverso di essa — una severa chiarezza.',
+  relational_reconfiguration: 'I legami si sono spostati.\nCiò che era centrale si è mosso alla periferia. Ciò che era invisibile ora porta peso.\nLa mappa delle connessioni è ridisegnata. Gli stessi nodi, linee diverse tra di essi.',
+};
+
+const STRATEGY_TERMINAL_IT: Record<CompletionStrategy, string> = {
+  integrate: 'Ciò che era separato ora condivide un unico respiro.',
+  sever: 'Il taglio è netto. Silenzio da entrambi i lati.',
+  expose: 'Visibile. Irreversibilmente visibile.',
+  collapse: 'La polvere si posa. Ciò che perdura è ciò che era reale.',
+  demand: 'L\'imperativo resta. Non si ripete.',
+  embody: 'Carne. Ossa. Il simbolo è diventato il corpo.',
+  limit: 'Il confine è tracciato. Oltre di esso, nulla di questa lettura.',
+  reverse: 'Ciò che era sotto ora affronta la luce.',
+  destabilize_further: 'Ancora aperto. Ancora in movimento. Questa non è la fine.',
+};
+
+const MODE_VOICE_IT: Record<string, string> = {
+  divinatory: 'Attraverso la lente temporale, le carte tracciano una traiettoria.',
+  philosophical: 'Attraverso la lente esistenziale, le carte interrogano il fondamento dell\'essere.',
+  cosmological: 'Attraverso la lente archetipica, le carte mappano forze simboliche universali.',
+};
+
+// ── Direct Insight Maps ─────────────────────────────
+
+const INSIGHT_BY_TENSION: Record<TensionType, { en: string; it: string }> = {
+  polarity: {
+    en: 'The core tension is between opposing forces that demand acknowledgment of both sides.',
+    it: 'La tensione fondamentale è tra forze opposte che richiedono il riconoscimento di entrambi i lati.',
+  },
+  hierarchy: {
+    en: 'A dominant pattern is asserting itself — the question is whether to support or redistribute that weight.',
+    it: 'Un pattern dominante si sta imponendo — la questione è se sostenere o redistribuire quel peso.',
+  },
+  illusion: {
+    en: 'What appears true at first glance conceals a deeper reality that must be confronted.',
+    it: 'Ciò che appare vero a prima vista nasconde una realtà più profonda che deve essere affrontata.',
+  },
+  excess: {
+    en: 'There is an overflow — too much energy, too much attachment. Restraint or redirection is needed.',
+    it: 'C\'è un eccesso — troppa energia, troppo attaccamento. È necessario contenimento o riorientamento.',
+  },
+  absence: {
+    en: 'Something essential is missing. The answer lies not in what is present, but in what has withdrawn.',
+    it: 'Qualcosa di essenziale manca. La risposta non risiede in ciò che è presente, ma in ciò che si è ritirato.',
+  },
+  sacrifice: {
+    en: 'A cost must be paid. The reading points toward something that must be released to move forward.',
+    it: 'Un costo deve essere pagato. La lettura indica qualcosa che deve essere rilasciato per procedere.',
+  },
+  identity_split: {
+    en: 'Two identities or paths coexist. A choice — or an integration — is approaching.',
+    it: 'Due identità o percorsi coesistono. Una scelta — o un\'integrazione — si avvicina.',
+  },
+  creation_destruction: {
+    en: 'Something is ending and something is beginning simultaneously. Both movements are essential.',
+    it: 'Qualcosa sta finendo e qualcosa sta iniziando simultaneamente. Entrambi i movimenti sono essenziali.',
+  },
+};
+
+const INSIGHT_BY_STRATEGY: Record<CompletionStrategy, { en: string; it: string }> = {
+  integrate: {
+    en: 'The path forward requires holding seemingly contradictory elements together.',
+    it: 'La via avanti richiede di tenere insieme elementi apparentemente contraddittori.',
+  },
+  sever: {
+    en: 'A clean break is indicated — separation from what no longer serves.',
+    it: 'È indicata una rottura netta — separazione da ciò che non serve più.',
+  },
+  expose: {
+    en: 'The situation demands transparency. What is hidden must come to light.',
+    it: 'La situazione richiede trasparenza. Ciò che è nascosto deve venire alla luce.',
+  },
+  collapse: {
+    en: 'An existing structure is unsustainable. Allow it to fall — what survives is genuine.',
+    it: 'Una struttura esistente è insostenibile. Lasciala cadere — ciò che sopravvive è genuino.',
+  },
+  demand: {
+    en: 'A non-negotiable requirement has crystallized. The reading is unambiguous about what is needed.',
+    it: 'Un requisito non negoziabile si è cristallizzato. La lettura è inequivocabile su ciò che serve.',
+  },
+  embody: {
+    en: 'The insight here is not intellectual — it must be lived, felt, enacted in the body and the world.',
+    it: 'L\'intuizione qui non è intellettuale — deve essere vissuta, sentita, incarnata nel corpo e nel mondo.',
+  },
+  limit: {
+    en: 'Boundaries are essential. Define what belongs and what must be excluded.',
+    it: 'I confini sono essenziali. Definisci ciò che appartiene e ciò che deve essere escluso.',
+  },
+  reverse: {
+    en: 'What seemed fixed is shifting. Prepare for an inversion of the current dynamic.',
+    it: 'Ciò che sembrava fisso sta cambiando. Preparati a un\'inversione della dinamica corrente.',
+  },
+  destabilize_further: {
+    en: 'This is not a time for resolution. Stay in the uncertainty — the answer has not yet formed.',
+    it: 'Questo non è il momento per la risoluzione. Resta nell\'incertezza — la risposta non si è ancora formata.',
+  },
+};
+
 // ─── D-Score Tone Modulation ────────────────────────
 
 interface ToneModulation {
@@ -305,32 +511,43 @@ function generateCardNarrative(
   totalCards: number,
   tensionType: TensionType,
   completionStrategy: CompletionStrategy,
-  tone: ToneModulation,
+  _tone: ToneModulation,
   prevCardName?: string,
+  language: NarrativeLanguage = 'en',
 ): string {
   const { cardName, role, thesis, destabilization, reconfiguration, embodiment } = step;
   const posLabel = placed.position.label;
   const reversed = placed.card.isReversed;
   const keywords = placed.card.keywords;
   const rhythm = TENSION_RHYTHM[tensionType];
-  const strategyMov = STRATEGY_MOVEMENT[completionStrategy];
+  const strategyMov = language === 'it' ? STRATEGY_MOVEMENT_IT[completionStrategy] : STRATEGY_MOVEMENT[completionStrategy];
+  const connectors = language === 'it' ? TENSION_CONNECTOR_IT[tensionType] : TENSION_CONNECTOR[tensionType];
 
   // ── 1. Position entry — minimal, rhythmic ──
-  const reversalMark = reversed ? ', inverted' : '';
+  const reversalMark = reversed
+    ? (language === 'it' ? ', invertita' : ', inverted')
+    : '';
   const positionEntry = index === 0
     ? `**${posLabel}**. ${cardName}${reversalMark}.`
     : index === totalCards - 1
-      ? `**${posLabel}**, the final position. ${cardName}${reversalMark}.`
+      ? (language === 'it'
+        ? `**${posLabel}**, la posizione finale. ${cardName}${reversalMark}.`
+        : `**${posLabel}**, the final position. ${cardName}${reversalMark}.`)
       : `**${posLabel}**. ${cardName}${reversalMark}.`;
 
   // ── 2. Connection to previous card via tension connector ──
-  const connectorIdx = Math.min(index - 1, rhythm.connectors.length - 1);
+  const connectorIdx = Math.min(index - 1, connectors.length - 1);
   const connectionPhrase = (prevCardName && index > 0)
-    ? `${TENSION_CONNECTOR[tensionType][Math.max(0, connectorIdx)]}`
+    ? `${connectors[Math.max(0, connectorIdx)]}`
     : '';
 
   // ── 3. Role — incarnated, not explained ──
-  const roleIncarnation: Record<string, string> = {
+  const roleIncarnation: Record<string, string> = language === 'it' ? {
+    anchor: `${cardName} tiene. Tutto il resto orbita intorno a questo.`,
+    catalyst: `${cardName} non riposa. Accende.`,
+    shadow: `Ciò che non viene detto ad alta voce — ${cardName} lo porta.`,
+    bridge: `Tra ciò che è venuto prima e ciò che segue, ${cardName} copre l'intervallo.`,
+  } : {
     anchor: `${cardName} holds. Everything else orbits this.`,
     catalyst: `${cardName} does not rest. It ignites.`,
     shadow: `What is not spoken out loud — ${cardName} carries it.`,
@@ -344,7 +561,9 @@ function generateCardNarrative(
       ? `${keywords[0]} —`
       : '';
   const concreteImage = keywordFragment
-    ? `${keywordFragment} not as description, but as presence.`
+    ? (language === 'it'
+      ? `${keywordFragment} non come descrizione, ma come presenza.`
+      : `${keywordFragment} not as description, but as presence.`)
     : '';
 
   // ── 5. Strategy escalation marker ──
@@ -361,7 +580,7 @@ function generateCardNarrative(
   }
 
   // Role (brief)
-  lines.push(roleIncarnation[role] ?? `${cardName} speaks from here.`);
+  lines.push(roleIncarnation[role] ?? (language === 'it' ? `${cardName} parla da qui.` : `${cardName} speaks from here.`));
 
   // Concrete image
   if (concreteImage) {
@@ -402,10 +621,12 @@ function generateCardNarrative(
  *
  * @param response — Full UnifiedReadingResponse (contains spread, IDA output, quality)
  * @param dimensions — D1–D6 quality dimension scores (optional, defaults to neutral tone)
+ * @param language — Narrative language: 'en' (default) or 'it'
  */
 export function generateSymbolicNarrative(
   response: UnifiedReadingResponse,
   dimensions?: DimensionScore[],
+  language: NarrativeLanguage = 'en',
 ): SymbolicNarrative {
   const qn = response.questionNarrative;
   const { tensionType, completionStrategy, resolutionArchetype, transformationSteps } = qn;
@@ -423,20 +644,24 @@ export function generateSymbolicNarrative(
   const dims = dimensions ?? defaultDimensions;
   const tone = computeToneModulation(dims);
 
-  const strategyMov = STRATEGY_MOVEMENT[completionStrategy];
+  const strategyMov = language === 'it' ? STRATEGY_MOVEMENT_IT[completionStrategy] : STRATEGY_MOVEMENT[completionStrategy];
 
   // ── Opening ────────────────────────────────
   const questionLine = response.question
     ? `"${response.question}"`
-    : 'No question was spoken, yet the cards have arranged themselves into a pattern that demands attention.';
+    : language === 'it'
+      ? 'Nessuna domanda è stata pronunciata, eppure le carte si sono disposte in un disegno che esige attenzione.'
+      : 'No question was spoken, yet the cards have arranged themselves into a pattern that demands attention.';
 
-  const modeVoice = response.mode === 'divinatory'
-    ? 'Through the temporal lens, the cards trace a trajectory.'
-    : response.mode === 'philosophical'
-      ? 'Through the existential lens, the cards interrogate the ground of being.'
-      : 'Through the archetypal lens, the cards map universal symbolic forces.';
+  const modeVoice = language === 'it'
+    ? (MODE_VOICE_IT[response.mode] ?? MODE_VOICE_IT.divinatory)
+    : response.mode === 'divinatory'
+      ? 'Through the temporal lens, the cards trace a trajectory.'
+      : response.mode === 'philosophical'
+        ? 'Through the existential lens, the cards interrogate the ground of being.'
+        : 'Through the archetypal lens, the cards map universal symbolic forces.';
 
-  const tensionOpening = TENSION_OPENING[tensionType];
+  const tensionOpening = language === 'it' ? TENSION_OPENING_IT[tensionType] : TENSION_OPENING[tensionType];
   const kineticLine = strategyMov.kinesis;
 
   const openingLines = response.question
@@ -456,28 +681,36 @@ export function generateSymbolicNarrative(
     const prevName = i > 0 ? steps[i - 1].cardName : undefined;
 
     cardNarratives.push(
-      generateCardNarrative(step, placed, i, cardsUsed, tensionType, completionStrategy, tone, prevName),
+      generateCardNarrative(step, placed, i, cardsUsed, tensionType, completionStrategy, tone, prevName, language),
     );
   }
 
   // ── Synthesis ──────────────────────────────
   const cardNames = steps.slice(0, cardsUsed).map(s => s.cardName);
   const joinedCards = cardNames.length <= 2
-    ? cardNames.join(' and ')
-    : `${cardNames.slice(0, -1).join(', ')}, and ${cardNames[cardNames.length - 1]}`;
+    ? cardNames.join(language === 'it' ? ' e ' : ' and ')
+    : language === 'it'
+      ? `${cardNames.slice(0, -1).join(', ')} e ${cardNames[cardNames.length - 1]}`
+      : `${cardNames.slice(0, -1).join(', ')}, and ${cardNames[cardNames.length - 1]}`;
 
   const synthLines: string[] = [];
 
-  synthLines.push(`${joinedCards}. A single structure.`);
+  synthLines.push(language === 'it'
+    ? `${joinedCards}. Una singola struttura.`
+    : `${joinedCards}. A single structure.`);
   synthLines.push('');
   synthLines.push(qn.synthesis);
 
   if (tone.unresolvedTension) {
     synthLines.push('');
-    synthLines.push('The tension remains partially unresolved — these cards do not offer a clean conclusion, and the dissonance is itself part of the meaning.');
+    synthLines.push(language === 'it'
+      ? 'La tensione resta parzialmente irrisolta — queste carte non offrono una conclusione pulita, e la dissonanza è essa stessa parte del significato.'
+      : 'The tension remains partially unresolved — these cards do not offer a clean conclusion, and the dissonance is itself part of the meaning.');
   } else if (tone.strongSynthesis) {
     synthLines.push('');
-    synthLines.push('The convergence is clear and forceful. What these cards say together cannot be easily dismissed.');
+    synthLines.push(language === 'it'
+      ? 'La convergenza è chiara e potente. Ciò che queste carte dicono insieme non può essere facilmente respinto.'
+      : 'The convergence is clear and forceful. What these cards say together cannot be easily dismissed.');
   }
 
   const synthesis = synthLines.join('\n');
@@ -485,18 +718,56 @@ export function generateSymbolicNarrative(
   // ── Resolution ─────────────────────────────
   const resolutionLines: string[] = [];
 
-  resolutionLines.push(RESOLUTION_CLOSURE[resolutionArchetype]);
+  resolutionLines.push(language === 'it'
+    ? RESOLUTION_CLOSURE_IT[resolutionArchetype]
+    : RESOLUTION_CLOSURE[resolutionArchetype]);
 
   if (tone.ambiguousEnding) {
     resolutionLines.push('');
-    resolutionLines.push('And yet — something remains unsaid. The ending is not fully sealed. This reading may circle back, demanding to be read again from a different angle.');
+    resolutionLines.push(language === 'it'
+      ? 'Eppure — qualcosa resta non detto. Il finale non è completamente sigillato. Questa lettura potrebbe tornare, chiedendo di essere riletta da un\'angolazione diversa.'
+      : 'And yet — something remains unsaid. The ending is not fully sealed. This reading may circle back, demanding to be read again from a different angle.');
   }
 
   // Terminal image — not a moral, a symbolic mark
   resolutionLines.push('');
-  resolutionLines.push(STRATEGY_TERMINAL[completionStrategy]);
+  resolutionLines.push(language === 'it'
+    ? STRATEGY_TERMINAL_IT[completionStrategy]
+    : STRATEGY_TERMINAL[completionStrategy]);
 
   const resolution = resolutionLines.join('\n');
 
-  return { opening, cardNarratives, synthesis, resolution };
+  // ── Direct Insight ─────────────────────────
+  const insightLines: string[] = [];
+  const lang = language;
+
+  // 1. Tension-derived insight
+  insightLines.push(INSIGHT_BY_TENSION[tensionType][lang]);
+
+  // 2. Strategy-derived insight
+  insightLines.push(INSIGHT_BY_STRATEGY[completionStrategy][lang]);
+
+  // 3. Card-specific grounding — use the anchor card's keywords
+  const anchorStep = transformationSteps.find(s => s.role === 'anchor') ?? transformationSteps[0];
+  const anchorPlaced = spread[transformationSteps.indexOf(anchorStep)] ?? spread[0];
+  const anchorKws = anchorPlaced.card.keywords.slice(0, 3);
+  if (anchorKws.length > 0) {
+    const kwList = anchorKws.join(', ');
+    insightLines.push('');
+    insightLines.push(lang === 'it'
+      ? `La carta chiave — **${anchorStep.cardName}** — porta i temi di ${kwList}. Questo è il centro gravitazionale della lettura.`
+      : `The key card — **${anchorStep.cardName}** — carries the themes of ${kwList}. This is the reading's gravitational center.`);
+  }
+
+  // 4. Concrete answer framing based on question
+  if (response.question) {
+    insightLines.push('');
+    insightLines.push(lang === 'it'
+      ? `In risposta diretta: le carte indicano che ${anchorStep.reconfiguration.charAt(0).toLowerCase()}${anchorStep.reconfiguration.slice(1)}`
+      : `In direct response: the cards indicate that ${anchorStep.reconfiguration.charAt(0).toLowerCase()}${anchorStep.reconfiguration.slice(1)}`);
+  }
+
+  const directInsight = insightLines.join('\n');
+
+  return { opening, cardNarratives, synthesis, resolution, directInsight };
 }

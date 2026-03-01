@@ -8,6 +8,9 @@
 /** Reading mode — structural analysis or unified symbolic discourse */
 export type ReadingMode = 'structural' | 'symbolic';
 
+/** Language for the symbolic narrative text */
+export type NarrativeLanguage = 'en' | 'it';
+
 // ─── Parameter Space Θ ─────────────────────────────
 
 /** Archetype families for the Major Arcana mapping */
@@ -670,6 +673,7 @@ export interface AppState {
   currentView: AppView;
   interrogationMode: InterrogationMode;
   readingMode: ReadingMode;
+  narrativeLanguage: NarrativeLanguage;
   parameters: TarotParameters;
   currentReading: Reading | null;
   isLoading: boolean;

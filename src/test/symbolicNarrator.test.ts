@@ -495,7 +495,157 @@ describe('SymbolicNarrator — Rhythm Engine', () => {
   });
 });
 
-// ─── 13. Archetypal Density ─────────────────────────
+// ─── 13. Direct Insight ─────────────────────────────
+
+describe('SymbolicNarrator — Direct Insight', () => {
+  it('directInsight field is present and non-empty', () => {
+    for (let seed = 1; seed <= 10; seed++) {
+      const { narrative } = makeNarrative(seed);
+      expect(narrative).toHaveProperty('directInsight');
+      expect(typeof narrative.directInsight).toBe('string');
+      expect(narrative.directInsight.length).toBeGreaterThan(20);
+    }
+  });
+
+  it('directInsight references the anchor card name', () => {
+    for (let seed = 1; seed <= 10; seed++) {
+      const { narrative, response } = makeNarrative(seed);
+      const steps = response.questionNarrative.transformationSteps;
+      const anchorStep = steps.find(s => s.role === 'anchor') ?? steps[0];
+      expect(narrative.directInsight).toContain(anchorStep.cardName);
+    }
+  });
+
+  it('directInsight includes tension-derived and strategy-derived lines', () => {
+    const { narrative } = makeNarrative(42);
+    // Should have multiple lines (tension insight + strategy insight + card grounding)
+    const lines = narrative.directInsight.split('\n').filter(l => l.trim().length > 0);
+    expect(lines.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it('directInsight includes "In direct response" when question is provided', () => {
+    const response = makeReading(42, 'divinatory', 'What lies ahead?');
+    const n = generateSymbolicNarrative(response);
+    expect(n.directInsight).toContain('In direct response');
+  });
+
+  it('directInsight deterministic — same seed produces identical insight', () => {
+    const { narrative: n1 } = makeNarrative(55);
+    const { narrative: n2 } = makeNarrative(55);
+    expect(n1.directInsight).toBe(n2.directInsight);
+  });
+
+  it('directInsight differs across different seeds', () => {
+    const insights = new Set<string>();
+    for (const seed of [1, 10, 25, 50, 99]) {
+      const { narrative } = makeNarrative(seed);
+      insights.add(narrative.directInsight);
+    }
+    expect(insights.size).toBeGreaterThanOrEqual(2);
+  });
+});
+
+// ─── 14. Language Support — Italian ─────────────────
+
+describe('SymbolicNarrator — Italian Language Support', () => {
+  function makeNarrativeIT(seed: number, mode: InterrogationMode = 'divinatory', question = 'What lies ahead?') {
+    const response = makeReading(seed, mode, question);
+    const qScore = computeQualityScore(response.spread, { ...defaultParams, seed });
+    return { narrative: generateSymbolicNarrative(response, qScore.dimensions, 'it'), response };
+  }
+
+  it('Italian opening contains Italian tension text', () => {
+    // Italian openings should contain Italian words, not English ones
+    const { narrative } = makeNarrativeIT(1);
+    // Italian tension openings all use Italian phrasing
+    const italianMarkers = ['Due forze', 'Una voce', 'carte mostrano', 'Troppo', 'silenzio', 'ferita', 'letture coesistono', 'nascendo'];
+    const englishMarkers = ['Two forces', 'One voice', 'cards show', 'Too much', 'silence in this spread', 'wound', 'readings coexist', 'Something is being born'];
+    // Opening should NOT contain English opening markers
+    const hasNoEnglish = englishMarkers.every(e => !narrative.opening.includes(e));
+    expect(hasNoEnglish).toBe(true);
+    // Opening should contain at least one Italian marker
+    const hasItalian = italianMarkers.some(m => narrative.opening.includes(m));
+    expect(hasItalian).toBe(true);
+  });
+
+  it('Italian opening contains Italian mode voice', () => {
+    const { narrative } = makeNarrativeIT(5, 'divinatory');
+    expect(narrative.opening).toContain('Attraverso la lente temporale');
+  });
+
+  it('Italian philosophical mode uses existential lens', () => {
+    const { narrative } = makeNarrativeIT(5, 'philosophical');
+    expect(narrative.opening).toContain('lente esistenziale');
+  });
+
+  it('Italian empty question produces Italian fallback', () => {
+    const response = makeReading(42, 'divinatory', '');
+    const n = generateSymbolicNarrative(response, undefined, 'it');
+    expect(n.opening).toContain('Nessuna domanda');
+  });
+
+  it('Italian synthesis uses Italian joining word "e"', () => {
+    const { narrative } = makeNarrativeIT(42);
+    // Italian join uses " e " instead of " and "
+    expect(narrative.synthesis).not.toContain(' and ');
+    expect(narrative.synthesis).toContain(' e ');
+  });
+
+  it('Italian resolution uses Italian strategy terminals', () => {
+    // Italian terminals contain Italian text, not English
+    const { narrative } = makeNarrativeIT(42);
+    // The resolution should not contain English terminal phrases
+    const englishTerminals = ['shares a single breath', 'Silence on both sides', 'Irreversibly visible', 'what was real', 'does not repeat itself', 'symbol has become the body', 'nothing of this reading', 'faces the light', 'not the end'];
+    const hasNoEnglishTerminal = englishTerminals.every(t => !narrative.resolution.includes(t));
+    expect(hasNoEnglishTerminal).toBe(true);
+  });
+
+  it('Italian directInsight uses Italian language', () => {
+    const { narrative } = makeNarrativeIT(42);
+    // Italian directInsight should contain Italian insight phrases
+    expect(narrative.directInsight).toContain('La carta chiave');
+    // Should NOT contain English card-key phrase
+    expect(narrative.directInsight).not.toContain('The key card');
+  });
+
+  it('Italian directInsight includes "In risposta diretta" when question provided', () => {
+    const { narrative } = makeNarrativeIT(42, 'divinatory', 'What lies ahead?');
+    expect(narrative.directInsight).toContain('In risposta diretta');
+  });
+
+  it('same seed produces different text for EN vs IT', () => {
+    const responseEN = makeReading(42);
+    const responseIT = makeReading(42);
+    const nEN = generateSymbolicNarrative(responseEN);
+    const nIT = generateSymbolicNarrative(responseIT, undefined, 'it');
+    expect(nEN.opening).not.toBe(nIT.opening);
+    expect(nEN.resolution).not.toBe(nIT.resolution);
+    expect(nEN.directInsight).not.toBe(nIT.directInsight);
+  });
+
+  it('Italian determinism — same seed + IT produces identical output', () => {
+    const r1 = makeReading(42);
+    const r2 = makeReading(42);
+    const n1 = generateSymbolicNarrative(r1, undefined, 'it');
+    const n2 = generateSymbolicNarrative(r2, undefined, 'it');
+    expect(n1.opening).toBe(n2.opening);
+    expect(n1.cardNarratives).toEqual(n2.cardNarratives);
+    expect(n1.synthesis).toBe(n2.synthesis);
+    expect(n1.resolution).toBe(n2.resolution);
+    expect(n1.directInsight).toBe(n2.directInsight);
+  });
+
+  it('Italian openings vary across seeds (at least 3 distinct)', () => {
+    const openings = new Set<string>();
+    for (const seed of [1, 10, 25, 50, 99]) {
+      const { narrative } = makeNarrativeIT(seed);
+      openings.add(narrative.opening);
+    }
+    expect(openings.size).toBeGreaterThanOrEqual(3);
+  });
+});
+
+// ─── 15. Archetypal Density ─────────────────────────
 
 describe('SymbolicNarrator — Archetypal Density', () => {
   it('each card narrative includes an embodiment image', () => {
