@@ -3,6 +3,11 @@
  * Core TypeScript Types & Interfaces
  * =================================================== */
 
+// ─── Reading Mode ──────────────────────────────────
+
+/** Reading mode — structural analysis or unified symbolic discourse */
+export type ReadingMode = 'structural' | 'symbolic';
+
 // ─── Parameter Space Θ ─────────────────────────────
 
 /** Archetype families for the Major Arcana mapping */
@@ -518,35 +523,124 @@ export interface UnifiedNarrative {
   cardReferences: Record<string, string>;
 }
 
-/** A single progressive accumulation step — one card's contribution to the emerging meaning */
-export interface ProgressiveStep {
-  /** 1-based depth in the progressive sequence */
+/** Existential state — structured transformation state (no text accumulation) */
+export interface ExistentialState {
+  /** The current living existential thesis */
+  currentThesis: string;
+  /** Primary tension axis in the reading */
+  tensionAxis: string;
+  /** Unresolved polarity (null if resolved) */
+  unresolvedPolarity: string | null;
+  /** Direction of ontological movement */
+  ontologicalDirection: string;
+}
+
+/** Transformation mode — how the EMDE engine processes each card */
+export type TransformationMode =
+  | 'dialectical'
+  | 'irruptive'
+  | 'revelatory'
+  | 'inversional'
+  | 'mythic'
+  | 'ethical_directive'
+  | 'definitional'
+  | 'tragic_recognition'
+  | 'relational_specific';
+
+/** Resolution archetype — how the synthesis resolves, derived from Mode + TensionType + CompletionStrategy */
+export type ResolutionArchetype =
+  | 'paradox_as_ground'
+  | 'irruptive_revelation'
+  | 'mythic_cosmogony'
+  | 'ethical_imperative'
+  | 'definitional_arrival'
+  | 'tragic_acceptance'
+  | 'relational_reconfiguration';
+
+/** Tension type — classifies the existential tension after all transformations */
+export type TensionType =
+  | 'polarity'
+  | 'hierarchy'
+  | 'illusion'
+  | 'excess'
+  | 'absence'
+  | 'sacrifice'
+  | 'identity_split'
+  | 'creation_destruction';
+
+/** Completion strategy — how the tension is to be resolved (with incompatibility constraints) */
+export type CompletionStrategy =
+  | 'integrate'
+  | 'sever'
+  | 'expose'
+  | 'collapse'
+  | 'demand'
+  | 'embody'
+  | 'limit'
+  | 'reverse'
+  | 'destabilize_further';
+
+/** Symbolic embodiment — concrete image, relational dynamic, or mythic scene */
+export interface SymbolicEmbodiment {
+  /** Type of embodiment */
+  type: 'concrete_image' | 'relational_dynamic' | 'mythic_scene';
+  /** Embodied content — a concrete scene or image */
+  content: string;
+  /** Card that sourced this embodiment */
+  cardSource: string;
+}
+
+/** A single transformation step — thesis → destabilization → reconfiguration */
+export interface TransformationStep {
+  /** 1-based depth in the sequence */
   depth: number;
   /** Card name at this step */
   cardName: string;
   /** Symbolic role */
   role: SymbolicRole;
-  /** The existential response generated at this step */
-  partialResponse: string;
-  /** Cumulative insight after this step (semantic summary, not repeated text) */
-  cumulativeInsight: string;
+  /** Transformation mode governing this step */
+  transformationMode: TransformationMode;
+  /** Provisional existential thesis answering Q */
+  thesis: string;
+  /** Destabilization via polarity or contradiction */
+  destabilization: string;
+  /** Reconfiguration of the thesis after destabilization */
+  reconfiguration: string;
+  /** Symbolic embodiment — concrete image, relational dynamic, or mythic scene */
+  embodiment: SymbolicEmbodiment;
+  /** Existential state AFTER this step */
+  existentialState: ExistentialState;
 }
 
-/** Question-targeted narrative — existential-hermeneutic voice addressing the question through cards */
+/** Question-targeted narrative — Existential Mode Diversity Engine (EMDE) output */
 export interface QuestionTargetedNarrative {
-  /** Question restated in interpretive form */
+  /** Question restated in existential framing */
   questionRestatement: string;
-  /** Progressive accumulation steps — one per card, each building on the last */
-  progressiveSteps: ProgressiveStep[];
-  /** Card-by-card woven explanation addressing the question */
+  /** Transformation mode selected for this reading */
+  transformationMode: TransformationMode;
+  /** Transformation steps — thesis → destabilization → reconfiguration per card */
+  transformationSteps: TransformationStep[];
+  /** Final existential state after all transformations */
+  existentialState: ExistentialState;
+  /** How the synthesis resolves — derived from mode + tension + strategy */
+  resolutionArchetype: ResolutionArchetype;
+  /** Classified tension type from the final existential state */
+  tensionType: TensionType;
+  /** Completion strategy selected (with incompatibility constraints) */
+  completionStrategy: CompletionStrategy;
+  /** Card-by-card explanation (legacy compat) */
   cardExplanations: Array<{
     cardName: string;
     role: SymbolicRole;
     contribution: string;
   }>;
-  /** Closing synthesis paragraph */
+  /** Declarative synthesis — aligned with resolution archetype */
   synthesis: string;
-  /** Full flowing narrative (existential-hermeneutic voice) */
+  /** Symbolic embodiments across the reading */
+  embodiments: SymbolicEmbodiment[];
+  /** LLM-generated embodied articulation (null if no LLM available) */
+  llmArticulation: string | null;
+  /** Full rendered narrative */
   fullNarrative: string;
   /** Mode-appropriate disclaimer */
   disclaimer: string;
@@ -575,6 +669,7 @@ export interface AppState {
   theme: ThemeMode;
   currentView: AppView;
   interrogationMode: InterrogationMode;
+  readingMode: ReadingMode;
   parameters: TarotParameters;
   currentReading: Reading | null;
   isLoading: boolean;

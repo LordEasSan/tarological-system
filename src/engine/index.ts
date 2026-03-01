@@ -70,3 +70,7 @@ export {
   reinterpretReading,
 } from './core';
 export type { SpreadResult } from './core';
+
+// Symbolic Narrator (symbolic reading mode)
+export { generateSymbolicNarrative } from './symbolicNarrator';
+export type { SymbolicNarrative } from './symbolicNarrator';

@@ -97,10 +97,15 @@ function shuffle<T>(arr: T[], seed?: number): T[] {
 // ─── Mock Endpoints ─────────────────────────────────
 
 export function mockGenerate(params: TarotParameters): GenerateResponse {
-  const cards = MAJOR_ARCANA.map((c) => ({
-    ...c,
-    isReversed: params.reversalsEnabled && Math.random() > 0.5,
-  }));
+  // Use seed-based PRNG for reversal to ensure determinism
+  let revSeed = params.seed ?? Math.floor(Math.random() * 100000);
+  const cards = MAJOR_ARCANA.map((c) => {
+    revSeed = (revSeed * 16807 + 0) % 2147483647;
+    return {
+      ...c,
+      isReversed: params.reversalsEnabled && (revSeed % 2 === 0),
+    };
+  });
   const shuffled = shuffle(cards, params.seed);
   const positions = SPREADS[params.spreadType] ?? SPREADS['three-card'];
   const drawCount = Math.min(params.drawCount, positions.length, shuffled.length);

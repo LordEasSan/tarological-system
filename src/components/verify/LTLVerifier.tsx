@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { ShieldCheck, ShieldAlert, Clock, Zap, ChevronDown, ChevronUp } from 'lucide-react';
 import { useState } from 'react';
+import { InfoTooltip } from '../tutorial';
 import type { LTLVerification, LTLPropertyType } from '../../types';
 
 interface LTLVerifierProps {
@@ -19,6 +20,27 @@ const typeColors: Record<LTLPropertyType, string> = {
   cosafety: 'text-cyan-400',
   liveness: 'text-amber-400',
   coliveness: 'text-purple-400',
+};
+
+const typeBadgeColors: Record<LTLPropertyType, string> = {
+  safety: 'dark:bg-blue-500/20 dark:text-blue-300 dark:border-blue-500/30 bg-blue-100 text-blue-700 border-blue-300/50',
+  cosafety: 'dark:bg-cyan-500/20 dark:text-cyan-300 dark:border-cyan-500/30 bg-cyan-100 text-cyan-700 border-cyan-300/50',
+  liveness: 'dark:bg-amber-500/20 dark:text-amber-300 dark:border-amber-500/30 bg-amber-100 text-amber-700 border-amber-300/50',
+  coliveness: 'dark:bg-purple-500/20 dark:text-purple-300 dark:border-purple-500/30 bg-purple-100 text-purple-700 border-purple-300/50',
+};
+
+const typeLabel: Record<LTLPropertyType, string> = {
+  safety: 'G(φ)',
+  cosafety: 'F(φ)',
+  liveness: 'GF(φ)',
+  coliveness: 'FG(φ)',
+};
+
+const typeTooltip: Record<LTLPropertyType, string> = {
+  safety: 'Safety: invariant that must hold in every state of the reading.',
+  cosafety: 'Co-safety: property achieved at some finite step of the pipeline.',
+  liveness: 'Liveness: property that must recur infinitely across all possible readings.',
+  coliveness: 'Co-liveness: eventual stability — property that holds from some point onward.',
 };
 
 export function LTLVerifier({ verification }: LTLVerifierProps) {
@@ -94,10 +116,16 @@ export function LTLVerifier({ verification }: LTLVerifierProps) {
               >
                 <Icon className={`w-4 h-4 mt-0.5 ${typeColors[prop.type]}`} />
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-xs font-semibold dark:text-mtps-text text-mtps-text-light">
                       {prop.name}
                     </span>
+                    {/* Type badge */}
+                    <span className={`text-[8px] px-1.5 py-0.5 rounded-full font-mono font-bold border
+                      ${typeBadgeColors[prop.type]}`}>
+                      {typeLabel[prop.type]}
+                    </span>
+                    <InfoTooltip text={typeTooltip[prop.type]} placement="right" maxWidth={220} />
                     <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium
                       ${prop.passed
                         ? 'dark:bg-mtps-teal/20 dark:text-mtps-teal bg-emerald-100 text-emerald-700'

@@ -12,6 +12,17 @@ export default defineConfig({
     },
   },
   base: '/tarological-system/',
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-charts': ['chart.js', 'react-chartjs-2'],
+          'vendor-motion': ['framer-motion'],
+        },
+      },
+    },
+  },
   test: {
     globals: true,
     environment: 'jsdom',

@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
-import { motion } from 'framer-motion';
-import { Sparkles, RotateCcw, BookOpen, ShieldCheck, RefreshCcw, Zap, Bot, Cpu, Brain } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Sparkles, RotateCcw, BookOpen, ShieldCheck, RefreshCcw, Zap, Bot, Cpu, Brain, ChevronDown, ChevronUp, BarChart3 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { SpreadVisualizer, TarotCardView } from '../components/cards';
@@ -433,36 +433,71 @@ export function GeneratePage() {
               {/* Verification Results */}
               {verification && <LTLVerifier verification={verification} />}
 
-              {/* Quality Summary (inline) */}
+              {/* Quality Summary (inline) with animated D1-D6 bars */}
               {qualityScore && view !== 'quality' && (
-                <div className="flex items-center gap-3 p-3 rounded-xl dark:bg-mtps-void/40 bg-gray-50
-                  border dark:border-mtps-border border-mtps-border-light">
-                  <span className={`font-mono text-sm font-bold ${
-                    qualityScore.composite >= 0.7 ? 'text-mtps-accent' :
-                    qualityScore.composite >= 0.4 ? 'text-mtps-gold' : 'text-red-400'
-                  }`}>
-                    Q = {(qualityScore.composite * 100).toFixed(1)}%
-                  </span>
-                  <div className="flex gap-1">
-                    {qualityScore.dimensions.map(d => (
-                      <span key={d.id} className={`w-6 h-1.5 rounded-full ${
-                        d.score >= 0.7 ? 'bg-mtps-accent' :
-                        d.score >= 0.4 ? 'bg-mtps-gold' : 'bg-red-400'
-                      }`} title={`${d.id}: ${(d.score * 100).toFixed(0)}%`} />
-                    ))}
-                  </div>
-                  {iterationLog && (
-                    <span className="text-[10px] font-mono dark:text-mtps-muted text-mtps-muted">
-                      {iterationLog.totalIterations}iter · {iterationLog.totalDurationMs}ms
-                      {iterationLog.converged && ` · ${iterationLog.convergenceReason === 'delta_threshold' ? 'ΔQ<τ' : 'Q≥Q*'}`}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3 p-3 rounded-xl dark:bg-mtps-void/40 bg-gray-50
+                    border dark:border-mtps-border border-mtps-border-light">
+                    <span className={`font-mono text-sm font-bold ${
+                      qualityScore.composite >= 0.7 ? 'text-mtps-accent' :
+                      qualityScore.composite >= 0.4 ? 'text-mtps-gold' : 'text-red-400'
+                    }`}>
+                      Q = {(qualityScore.composite * 100).toFixed(1)}%
                     </span>
-                  )}
-                  <button
-                    onClick={() => setView('quality')}
-                    className="ml-auto text-[10px] font-mono dark:text-mtps-accent text-mtps-purple hover:underline"
-                  >
-                    Details →
-                  </button>
+                    <div className="flex gap-1">
+                      {qualityScore.dimensions.map(d => (
+                        <div key={d.id} className="group relative">
+                          <motion.span
+                            initial={{ width: 0 }}
+                            animate={{ width: 24 }}
+                            transition={{ duration: 0.4 }}
+                            className={`block h-1.5 rounded-full ${
+                              d.score >= 0.7 ? 'bg-mtps-accent' :
+                              d.score >= 0.4 ? 'bg-mtps-gold' : 'bg-red-400'
+                            }`}
+                            style={{ opacity: 0.4 + d.score * 0.6 }}
+                          />
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1
+                            rounded text-[9px] font-mono whitespace-nowrap
+                            dark:bg-mtps-deep dark:text-mtps-text dark:border dark:border-mtps-border
+                            bg-gray-800 text-white
+                            opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                            {d.id}: {d.name} — {(d.score * 100).toFixed(0)}%
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    {iterationLog && (
+                      <span className="text-[10px] font-mono dark:text-mtps-muted text-mtps-muted">
+                        {iterationLog.totalIterations}iter · {iterationLog.totalDurationMs}ms
+                        {iterationLog.converged && ` · ${iterationLog.convergenceReason === 'delta_threshold' ? 'ΔQ<τ' : 'Q≥Q*'}`}
+                      </span>
+                    )}
+                    {/* ΔQ from last iteration */}
+                    {iterationLog && iterationLog.iterations.length > 1 && (() => {
+                      const last = iterationLog.iterations[iterationLog.iterations.length - 1];
+                      const prev = iterationLog.iterations[iterationLog.iterations.length - 2];
+                      const delta = last.quality.composite - prev.quality.composite;
+                      return (
+                        <span className={`text-[10px] font-mono font-bold ${
+                          delta > 0 ? 'dark:text-emerald-400 text-emerald-600' :
+                          delta < 0 ? 'dark:text-rose-400 text-rose-600' :
+                          'dark:text-mtps-muted text-mtps-muted'
+                        }`}>
+                          ΔQ={delta > 0 ? '+' : ''}{(delta * 100).toFixed(1)}%
+                        </span>
+                      );
+                    })()}
+                    <button
+                      onClick={() => setView('quality')}
+                      className="ml-auto text-[10px] font-mono dark:text-mtps-accent text-mtps-purple hover:underline"
+                    >
+                      Details →
+                    </button>
+                  </div>
+
+                  {/* Expandable D1-D6 quick bars */}
+                  <QualityQuickBars score={qualityScore} />
                 </div>
               )}
             </div>
@@ -514,6 +549,71 @@ export function GeneratePage() {
         qualityScore={qualityScore}
         iterationLog={iterationLog}
       />
+    </div>
+  );
+}
+
+/** Expandable D1-D6 animated bars with labels */
+function QualityQuickBars({ score }: { score: QualityScore }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="rounded-lg border dark:border-mtps-border/50 dark:bg-mtps-deep/20
+      border-mtps-border-light/50 bg-gray-50/30 overflow-hidden">
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between px-3 py-2 text-left
+          dark:hover:bg-mtps-card/40 hover:bg-gray-100 transition-colors"
+      >
+        <span className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider dark:text-mtps-muted text-mtps-muted">
+          <BarChart3 className="w-3 h-3" />
+          D1–D6 Details
+        </span>
+        {open
+          ? <ChevronUp className="w-3.5 h-3.5 dark:text-mtps-muted text-mtps-muted" />
+          : <ChevronDown className="w-3.5 h-3.5 dark:text-mtps-muted text-mtps-muted" />}
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <div className="px-3 pb-3 space-y-1.5">
+              {score.dimensions.map((d, i) => (
+                <div key={d.id} className="flex items-center gap-2 text-[10px]">
+                  <span className="w-6 font-mono font-bold dark:text-mtps-muted text-mtps-muted">{d.id}</span>
+                  <span className="w-28 truncate dark:text-mtps-silver text-mtps-text-light text-[9px]">{d.name}</span>
+                  <div className="flex-1 h-1.5 rounded-full dark:bg-mtps-deep bg-gray-200 overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${d.score * 100}%` }}
+                      transition={{ duration: 0.5, delay: i * 0.06 }}
+                      className={`h-full rounded-full ${
+                        d.score >= 0.7 ? 'bg-emerald-500' :
+                        d.score >= 0.4 ? 'bg-amber-500' : 'bg-red-500'
+                      }`}
+                    />
+                  </div>
+                  <span className={`w-8 text-right font-mono font-bold ${
+                    d.score >= 0.7 ? 'dark:text-emerald-400 text-emerald-600' :
+                    d.score >= 0.4 ? 'dark:text-amber-400 text-amber-600' :
+                    'dark:text-rose-400 text-rose-600'
+                  }`}>
+                    {(d.score * 100).toFixed(0)}%
+                  </span>
+                </div>
+              ))}
+              <p className="text-[9px] dark:text-mtps-muted/50 text-mtps-muted/40 pt-1 italic">
+                {score.dimensions.reduce((min, dim) => dim.score < min.score ? dim : min).details}
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

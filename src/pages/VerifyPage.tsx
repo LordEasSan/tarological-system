@@ -159,8 +159,30 @@ export function VerifyPage() {
           id="tour-verify-results"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
+          className="space-y-4"
         >
           <LTLVerifier verification={verification} />
+
+          {/* Micro-explanation of result */}
+          <div className={`p-4 rounded-xl border text-xs leading-relaxed
+            ${verification.overallPassed
+              ? 'dark:border-emerald-500/30 dark:bg-emerald-500/5 border-emerald-200 bg-emerald-50'
+              : 'dark:border-rose-500/30 dark:bg-rose-500/5 border-rose-200 bg-rose-50'
+            }`}>
+            <p className={`font-semibold mb-1 ${verification.overallPassed
+              ? 'dark:text-emerald-400 text-emerald-700'
+              : 'dark:text-rose-400 text-rose-700'
+            }`}>
+              {verification.overallPassed
+                ? '✓ All structural properties verified.'
+                : `✗ ${verification.properties.filter(p => !p.passed).length} propert${verification.properties.filter(p => !p.passed).length === 1 ? 'y' : 'ies'} failed.`}
+            </p>
+            <p className="dark:text-mtps-muted text-mtps-muted">
+              {verification.overallPassed
+                ? 'The reading satisfies every safety, co-safety, liveness, and co-liveness constraint. The spread is structurally sound.'
+                : `Review failed properties above. ${verification.properties.find(p => !p.passed)?.details ?? 'Reconfigure parameters or regenerate to resolve.'}`}
+            </p>
+          </div>
         </motion.div>
       )}
 

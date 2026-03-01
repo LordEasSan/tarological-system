@@ -5,15 +5,16 @@ import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
 import { useApp, defaultParameters } from '../context/AppContext';
 import { MeaningRadar } from '../components/charts';
 import { InfoTooltip } from '../components/tutorial';
-import type { TarotParameters, ArchetypeFamily, SpreadType } from '../types';
+import type { TarotParameters, ArchetypeFamily, SpreadType, ReadingMode } from '../types';
 
-const STEPS = ['Cultural Framework', 'Entropy & Randomness', 'Narrative Engine', 'Aesthetic & Review'];
+const STEPS = ['Cultural Framework', 'Entropy & Randomness', 'Narrative Engine', 'Reading Mode', 'Review'];
 
 export function ConfigurePage() {
   const { dispatch } = useApp();
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [params, setParams] = useState<TarotParameters>({ ...defaultParameters });
+  const [readingMode, setReadingMode] = useState<ReadingMode>('structural');
 
   const updateParam = <K extends keyof TarotParameters>(key: K, value: TarotParameters[K]) => {
     setParams((prev) => ({ ...prev, [key]: value }));
@@ -28,7 +29,9 @@ export function ConfigurePage() {
 
   const handleFinish = () => {
     dispatch({ type: 'SET_PARAMETERS', payload: params });
-    navigate('/generate');
+    dispatch({ type: 'SET_READING_MODE', payload: readingMode });
+    // Navigate to unified reading page for symbolic mode, generate page for structural
+    navigate(readingMode === 'symbolic' ? '/reading' : '/generate');
   };
 
   return (
@@ -115,8 +118,15 @@ export function ConfigurePage() {
               />
             )}
             {step === 3 && (
-              <Step4
+              <StepReadingMode
+                readingMode={readingMode}
+                onReadingModeChange={setReadingMode}
+              />
+            )}
+            {step === 4 && (
+              <StepReview
                 params={params}
+                readingMode={readingMode}
                 onNarrativeChange={(v) => updateParam('narrativeStyle', v)}
               />
             )}
@@ -361,8 +371,63 @@ function Step3(props: {
   );
 }
 
-function Step4(props: {
+function StepReadingMode(props: {
+  readingMode: ReadingMode;
+  onReadingModeChange: (v: ReadingMode) => void;
+}) {
+  const modes: { value: ReadingMode; label: string; icon: string; desc: string }[] = [
+    {
+      value: 'structural',
+      label: 'Structural Analysis',
+      icon: '🔬',
+      desc: 'Focus on formal structure, tensions and resolution logic. Shows D1–D6 dimensions, LTL verification, and iteration metrics.',
+    },
+    {
+      value: 'symbolic',
+      label: 'Symbolic Reading',
+      icon: '🔮',
+      desc: 'Narrativa simbolica completa, come farebbe un cartomante esperto. Full symbolic narrative derived from the IDA engine — dense, initiatic, structurally grounded.',
+    },
+  ];
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <label className="block text-sm font-semibold dark:text-mtps-gold text-mtps-purple mb-1">
+          Reading Mode
+        </label>
+        <p className="text-xs dark:text-mtps-muted text-mtps-muted mb-4">
+          Choose how the reading is presented. Structural mode exposes the engine internals; Symbolic mode delivers a unified narrative.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {modes.map((m) => (
+            <button
+              key={m.value}
+              onClick={() => props.onReadingModeChange(m.value)}
+              className={`p-5 rounded-2xl text-left border transition-all duration-200
+                ${props.readingMode === m.value
+                  ? 'dark:border-mtps-gold dark:bg-mtps-gold/10 border-mtps-violet bg-mtps-violet/10 ring-2 dark:ring-mtps-gold/40 ring-mtps-violet/40'
+                  : 'dark:border-mtps-border dark:hover:border-mtps-violet/40 border-mtps-border-light hover:border-mtps-accent-alt/30'
+                }`}
+            >
+              <span className="text-2xl mb-2 block">{m.icon}</span>
+              <span className="block text-sm font-bold dark:text-mtps-text text-mtps-text-light mb-1">
+                {m.label}
+              </span>
+              <span className="block text-xs dark:text-mtps-muted text-mtps-muted leading-relaxed">
+                {m.desc}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StepReview(props: {
   params: TarotParameters;
+  readingMode: ReadingMode;
   onNarrativeChange: (v: TarotParameters['narrativeStyle']) => void;
 }) {
   const styles: { value: TarotParameters['narrativeStyle']; label: string; desc: string }[] = [
@@ -414,6 +479,10 @@ function Step4(props: {
           <dd className="dark:text-mtps-text text-mtps-text-light font-medium">{props.params.reversalsEnabled ? 'Yes' : 'No'}</dd>
           <dt className="dark:text-mtps-muted text-mtps-muted">Narrative</dt>
           <dd className="dark:text-mtps-text text-mtps-text-light font-medium">{props.params.narrativeStyle}</dd>
+          <dt className="dark:text-mtps-muted text-mtps-muted">Reading Mode</dt>
+          <dd className={`font-medium ${props.readingMode === 'symbolic' ? 'dark:text-mtps-gold text-mtps-violet' : 'dark:text-mtps-text text-mtps-text-light'}`}>
+            {props.readingMode === 'symbolic' ? '🔮 Unified Symbolic' : '🔬 Structural'}
+          </dd>
         </dl>
       </div>
     </div>
