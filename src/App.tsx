@@ -3,8 +3,10 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
 import { AppProvider } from './context/AppContext';
 import { TutorialProvider } from './context/TutorialContext';
+import { TokenProvider } from './context/TokenContext';
 import { Layout } from './components/layout';
 import { TourOverlay } from './components/tutorial';
+import { TokenSync } from './components/token';
 import { WelcomePage } from './pages';
 
 // Lazy-load heavy pages — keeps initial bundle small
@@ -27,24 +29,27 @@ function App() {
   return (
     <ThemeProvider>
       <AppProvider>
-        <BrowserRouter basename="/tarological-system">
-          <TutorialProvider>
-            <Suspense fallback={<LazyFallback />}>
-              <Routes>
-                <Route element={<Layout />}>
-                  <Route path="/" element={<WelcomePage />} />
-                  <Route path="/configure" element={<ConfigurePage />} />
-                  <Route path="/generate" element={<GeneratePage />} />
-                  <Route path="/verify" element={<VerifyPage />} />
-                  <Route path="/philosophical" element={<PhilosophicalPage />} />
-                  <Route path="/cosmological" element={<CosmologicalPage />} />
-                  <Route path="/reading" element={<UnifiedReadingPage />} />
-                </Route>
-              </Routes>
-            </Suspense>
-            <TourOverlay />
-          </TutorialProvider>
-        </BrowserRouter>
+        <TokenProvider>
+          <TokenSync />
+          <BrowserRouter basename="/tarological-system">
+            <TutorialProvider>
+              <Suspense fallback={<LazyFallback />}>
+                <Routes>
+                  <Route element={<Layout />}>
+                    <Route path="/" element={<WelcomePage />} />
+                    <Route path="/configure" element={<ConfigurePage />} />
+                    <Route path="/generate" element={<GeneratePage />} />
+                    <Route path="/verify" element={<VerifyPage />} />
+                    <Route path="/philosophical" element={<PhilosophicalPage />} />
+                    <Route path="/cosmological" element={<CosmologicalPage />} />
+                    <Route path="/reading" element={<UnifiedReadingPage />} />
+                  </Route>
+                </Routes>
+              </Suspense>
+              <TourOverlay />
+            </TutorialProvider>
+          </BrowserRouter>
+        </TokenProvider>
       </AppProvider>
     </ThemeProvider>
   );

@@ -13,6 +13,7 @@ export default defineConfig({
   },
   base: '/tarological-system/',
   build: {
+    sourcemap: false,
     rollupOptions: {
       output: {
         manualChunks: {

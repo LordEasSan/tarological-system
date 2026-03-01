@@ -202,7 +202,7 @@ export function executeUnifiedReading(
   // ── Validation ────
   const validation = validateOutput(narrative, spread, question, lens);
   if (!validation.valid) {
-    console.warn('[MTPS Unified Pipeline] Validation issues:', validation.issues);
+    if (import.meta.env.DEV) console.warn('[MTPS Unified Pipeline] Validation issues:', validation.issues);
   }
 
   // ── Update personalization for future readings ────

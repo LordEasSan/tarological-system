@@ -460,3 +460,170 @@ describe('SymbolicReadingView — Direct Insight Section', () => {
     expect(src).toContain('narrative.directInsight');
   });
 });
+
+// ─── 12. JSX Structure Regression Tests ─────────────
+
+describe('UnifiedReadingPage — JSX Structure Integrity', () => {
+  /**
+   * These tests prevent regressions from corrupted merge/replace operations
+   * that previously introduced broken JSX tags like `<div:bg-mtps-...>` or
+   * misplaced closing tags.
+   */
+
+  let src: string;
+  beforeAll(async () => {
+    const fs = await import('fs');
+    src = fs.readFileSync('src/pages/UnifiedReadingPage.tsx', 'utf-8');
+  });
+
+  it('contains no corrupted tag patterns (<div: or </div:)', () => {
+    expect(src).not.toMatch(/<div:/);
+    expect(src).not.toMatch(/<\/div:/);
+  });
+
+  it('contains no stray ">6" corruption artifact', () => {
+    expect(src).not.toContain('">6"');
+    expect(src).not.toContain('">6');
+  });
+
+  it('motion.div open/close tags are balanced', () => {
+    const opens = (src.match(/<motion\.div[\s>]/g) || []).length;
+    const selfClosing = (src.match(/<motion\.div[^>]*\/>/g) || []).length;
+    const closes = (src.match(/<\/motion\.div>/g) || []).length;
+    expect(opens - selfClosing).toBe(closes);
+  });
+
+  it('header section uses motion.div with reading-header testid', () => {
+    expect(src).toContain('data-testid="reading-header"');
+    const headerMatch = src.match(/data-testid="reading-header"/);
+    expect(headerMatch).toBeTruthy();
+  });
+
+  it('config-summary-bar appears before symbolic-reading-view', () => {
+    const summaryPos = src.indexOf('data-testid="config-summary-bar"');
+    const symbolicViewPos = src.indexOf('data-testid="symbolic-reading-view"');
+    expect(summaryPos).toBeGreaterThan(-1);
+    expect(symbolicViewPos).toBeGreaterThan(-1);
+    expect(summaryPos).toBeLessThan(symbolicViewPos);
+  });
+
+  it('direct-insight appears after Resolution and before structural-derivation', () => {
+    const resolutionHeader = src.indexOf('─── Resolution ───');
+    const directInsight = src.indexOf('data-testid="direct-insight"');
+    const structuralDerivation = src.indexOf('data-testid="structural-derivation"');
+    expect(resolutionHeader).toBeGreaterThan(-1);
+    expect(directInsight).toBeGreaterThan(resolutionHeader);
+    expect(directInsight).toBeLessThan(structuralDerivation);
+  });
+
+  it('direct-insight is NOT nested inside card-badges div', () => {
+    const allCardBadgesPositions = [...src.matchAll(/data-testid="card-badges-\d+"/g)].map(m => m.index!);
+    const directInsightPos = src.indexOf('data-testid="direct-insight"');
+    for (const badgePos of allCardBadgesPositions) {
+      expect(badgePos).toBeLessThan(directInsightPos);
+    }
+  });
+
+  it('language-selector is inside config-summary-bar block', () => {
+    const configBarPos = src.indexOf('data-testid="config-summary-bar"');
+    const langSelectorPos = src.indexOf('data-testid="language-selector"');
+    const configBarClosingPos = src.indexOf('</motion.div>', configBarPos);
+    expect(langSelectorPos).toBeGreaterThan(configBarPos);
+    expect(langSelectorPos).toBeLessThan(configBarClosingPos);
+  });
+
+  it('no duplicate direct-insight sections exist', () => {
+    const matches = src.match(/data-testid="direct-insight"/g) || [];
+    expect(matches.length).toBe(1);
+  });
+
+  it('no duplicate config-summary-bar sections exist', () => {
+    const matches = src.match(/data-testid="config-summary-bar"/g) || [];
+    expect(matches.length).toBe(1);
+  });
+
+  it('no duplicate language-selector sections exist', () => {
+    const matches = src.match(/data-testid="language-selector"/g) || [];
+    expect(matches.length).toBe(1);
+  });
+});
+
+// ─── 13. Rendered Component — Config Summary Bar ────
+
+import { UnifiedReadingPage } from '../pages/UnifiedReadingPage';
+
+describe('UnifiedReadingPage — Rendered Config Summary Bar', () => {
+  it('renders config-summary-bar with θ label', () => {
+    renderWithProviders(<UnifiedReadingPage />, { route: '/reading' });
+    const summaryBar = screen.getByTestId('config-summary-bar');
+    expect(summaryBar).toBeInTheDocument();
+    expect(summaryBar.textContent).toContain('θ');
+  });
+
+  it('config summary bar contains parameter pills', () => {
+    renderWithProviders(<UnifiedReadingPage />, { route: '/reading' });
+    const summaryBar = screen.getByTestId('config-summary-bar');
+    expect(summaryBar.textContent).toContain('cards');
+  });
+
+  it('renders Reconfigure and Home buttons', () => {
+    renderWithProviders(<UnifiedReadingPage />, { route: '/reading' });
+    expect(screen.getByText(/Reconfigure/)).toBeInTheDocument();
+    expect(screen.getByText(/Home/)).toBeInTheDocument();
+  });
+});
+
+// ─── 14. Rendered Component — Language Selector ─────
+
+describe('UnifiedReadingPage — Rendered Language Selector', () => {
+  it('renders language-selector with EN and IT buttons', () => {
+    renderWithProviders(<UnifiedReadingPage />, { route: '/reading' });
+    const langSelector = screen.getByTestId('language-selector');
+    expect(langSelector).toBeInTheDocument();
+    expect(langSelector.textContent).toContain('EN');
+    expect(langSelector.textContent).toContain('IT');
+  });
+
+  it('EN button is active by default (has accent class)', () => {
+    renderWithProviders(<UnifiedReadingPage />, { route: '/reading' });
+    const langSelector = screen.getByTestId('language-selector');
+    const buttons = langSelector.querySelectorAll('button');
+    const enBtn = Array.from(buttons).find(b => b.textContent?.trim() === 'EN')!;
+    expect(enBtn.className).toContain('mtps-accent');
+  });
+
+  it('clicking IT toggles language without crashing', () => {
+    renderWithProviders(<UnifiedReadingPage />, { route: '/reading' });
+    const langSelector = screen.getByTestId('language-selector');
+    const buttons = langSelector.querySelectorAll('button');
+    const itBtn = Array.from(buttons).find(b => b.textContent?.trim() === 'IT')!;
+    expect(() => fireEvent.click(itBtn)).not.toThrow();
+  });
+
+  it('clicking IT makes IT button active', () => {
+    renderWithProviders(<UnifiedReadingPage />, { route: '/reading' });
+    const langSelector = screen.getByTestId('language-selector');
+    const buttons = langSelector.querySelectorAll('button');
+    const itBtn = Array.from(buttons).find(b => b.textContent?.trim() === 'IT')!;
+    fireEvent.click(itBtn);
+    expect(itBtn.className).toContain('mtps-accent');
+  });
+});
+
+// ─── 15. Rendered Component — Reading Header ────────
+
+describe('UnifiedReadingPage — Rendered Header', () => {
+  it('renders reading-header with title', () => {
+    renderWithProviders(<UnifiedReadingPage />, { route: '/reading' });
+    const header = screen.getByTestId('reading-header');
+    expect(header).toBeInTheDocument();
+    expect(header.textContent).toContain('Unified Symbolic Reading');
+  });
+
+  it('header uses responsive sm: layout classes', async () => {
+    const fs = await import('fs');
+    const src = fs.readFileSync('src/pages/UnifiedReadingPage.tsx', 'utf-8');
+    expect(src).toContain('sm:flex-row');
+    expect(src).toContain('sm:items-center');
+  });
+});

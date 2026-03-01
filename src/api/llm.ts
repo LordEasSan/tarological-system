@@ -1,12 +1,11 @@
 /**
- * API — GitHub LLM Integration Placeholder
+ * API — GitHub LLM Integration
  *
  * Interface for GitHub Models (Azure AI) narrative generation.
- * Falls back to the local narrative engine when not configured.
+ * Falls back to the local narrative engine when no token is provided.
  *
- * To enable:
- *   1. Set VITE_GITHUB_LLM_TOKEN in your .env
- *   2. Optionally set VITE_GITHUB_LLM_MODEL (default: gpt-4o-mini)
+ * Token is supplied at runtime from the client-side TokenContext
+ * (stored in localStorage, never from env vars in production).
  *
  * Uses the GitHub Models inference API:
  *   POST https://models.inference.ai.azure.com/chat/completions
@@ -17,9 +16,24 @@ import type { NarrativeConfig } from '../engine/narrative';
 
 const LLM_ENDPOINT = 'https://models.inference.ai.azure.com/chat/completions';
 
-/** Check if LLM is available */
+// ─── Runtime token bridge ───────────────────────────
+// Set by the React layer via setClientToken(); read by the API functions.
+
+let _clientToken: string | null = null;
+
+/** Called by TokenContext provider to keep the runtime token in sync. */
+export function setClientToken(token: string | null): void {
+  _clientToken = token;
+}
+
+/** Get the current runtime token. */
+export function getClientToken(): string | null {
+  return _clientToken;
+}
+
+/** Check if LLM is available (token is configured). */
 export function isLLMAvailable(): boolean {
-  return !!import.meta.env.VITE_GITHUB_LLM_TOKEN;
+  return !!_clientToken;
 }
 
 /** Get configured model name */
@@ -71,7 +85,7 @@ export async function generateLLMNarrative(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${import.meta.env.VITE_GITHUB_LLM_TOKEN}`,
+        'Authorization': `Bearer ${_clientToken}`,
       },
       body: JSON.stringify({
         model: getModel(),
@@ -91,7 +105,7 @@ export async function generateLLMNarrative(
     const data = await response.json();
     return data.choices?.[0]?.message?.content ?? 'No response from LLM.';
   } catch (error) {
-    console.warn('[MTPS] LLM fallback to local engine:', error);
+    if (import.meta.env.DEV) console.warn('[MTPS] LLM fallback to local engine:', error);
     const config: NarrativeConfig = {
       style: params.narrativeStyle,
       weights: params.meaningWeights,

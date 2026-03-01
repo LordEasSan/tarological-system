@@ -182,7 +182,13 @@ export function UnifiedReadingPage() {
   const modeConfig = MODE_CONFIG[mode];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">6"
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      {/* ─── Header ─── */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8"
+        data-testid="reading-header"
       >
         <div>
           <h1 className="font-display text-3xl font-bold gradient-text flex items-center gap-2">
@@ -1281,34 +1287,6 @@ function SymbolicReadingView({
                   ${ROLE_BADGE[step?.role] || 'dark:bg-mtps-card/50 dark:text-mtps-muted dark:border-mtps-border bg-gray-100 text-gray-600 border-gray-200'}`}>
                   {step?.role}
                 </span>
-
-      {/* ─── Direct Insight ─── */}
-      {narrative.directInsight && (
-        <>
-          <div className="flex items-center gap-3 sm:gap-4 mb-8 sm:mb-10">
-            <div className="flex-1 h-px dark:bg-emerald-500/30 bg-emerald-400/30" />
-            <Zap className="w-4 h-4 dark:text-emerald-400/60 text-emerald-600/60" />
-            <div className="flex-1 h-px dark:bg-emerald-500/30 bg-emerald-400/30" />
-          </div>
-
-          <motion.section
-            data-testid="direct-insight"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.7, duration: 0.6 }}
-            className="mb-10 sm:mb-12 px-4 sm:px-6 py-4 sm:py-5 rounded-2xl border-2
-              dark:border-emerald-500/30 dark:bg-emerald-500/5
-              border-emerald-400/30 bg-emerald-50/30"
-          >
-            <h3 className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.2em] dark:text-emerald-400 text-emerald-700 mb-3 sm:mb-4">
-              Direct Insight
-            </h3>
-            <div className="text-[14px] sm:text-[15px] dark:text-emerald-100/80 text-emerald-900/80 font-serif leading-[1.9]">
-              {renderNarrative(narrative.directInsight)}
-            </div>
-          </motion.section>
-        </>
-      )}
                 {qn.tensionType && (
                   <span className="inline-block px-1.5 py-0.5 rounded-full text-[10px] font-medium border
                     dark:bg-rose-500/15 dark:text-rose-300 dark:border-rose-500/25
@@ -1381,6 +1359,34 @@ function SymbolicReadingView({
           {renderNarrative(narrative.resolution)}
         </div>
       </motion.section>
+
+      {/* ─── Direct Insight ─── */}
+      {narrative.directInsight && (
+        <>
+          <div className="flex items-center gap-3 sm:gap-4 mb-8 sm:mb-10">
+            <div className="flex-1 h-px dark:bg-emerald-500/30 bg-emerald-400/30" />
+            <Zap className="w-4 h-4 dark:text-emerald-400/60 text-emerald-600/60" />
+            <div className="flex-1 h-px dark:bg-emerald-500/30 bg-emerald-400/30" />
+          </div>
+
+          <motion.section
+            data-testid="direct-insight"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.7, duration: 0.6 }}
+            className="mb-10 sm:mb-12 px-4 sm:px-6 py-4 sm:py-5 rounded-2xl border-2
+              dark:border-emerald-500/30 dark:bg-emerald-500/5
+              border-emerald-400/30 bg-emerald-50/30"
+          >
+            <h3 className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.2em] dark:text-emerald-400 text-emerald-700 mb-3 sm:mb-4">
+              Direct Insight
+            </h3>
+            <div className="text-[14px] sm:text-[15px] dark:text-emerald-100/80 text-emerald-900/80 font-serif leading-[1.9]">
+              {renderNarrative(narrative.directInsight)}
+            </div>
+          </motion.section>
+        </>
+      )}
 
       {/* ─── Collapsible Structural Derivation ─── */}
       <div data-testid="structural-derivation" className="rounded-xl border dark:border-mtps-border/40 dark:bg-mtps-deep/20

@@ -25,7 +25,7 @@ import type {
   PhilosophicalInterpretation,
   NarrativeIntegration,
 } from '../../types';
-import { isLLMAvailable } from '../../api/llm';
+import { isLLMAvailable, getClientToken } from '../../api/llm';
 
 // ─── NIL Input ──────────────────────────────────────
 
@@ -262,7 +262,7 @@ const LLM_ENDPOINT = 'https://models.inference.ai.azure.com/chat/completions';
 
 async function callLLM(input: NarrativeIntegrationInput): Promise<NarrativeIntegration | null> {
   try {
-    const token = import.meta.env.VITE_GITHUB_LLM_TOKEN;
+    const token = getClientToken();
     const model = import.meta.env.VITE_GITHUB_LLM_MODEL || 'gpt-4o-mini';
 
     const response = await fetch(LLM_ENDPOINT, {
@@ -312,7 +312,7 @@ async function callLLM(input: NarrativeIntegrationInput): Promise<NarrativeInteg
 
     return parsed;
   } catch (error) {
-    console.warn('[MTPS NIL] LLM call failed, using local fallback:', error);
+    if (import.meta.env.DEV) console.warn('[MTPS NIL] LLM call failed, using local fallback:', error);
     return null;
   }
 }

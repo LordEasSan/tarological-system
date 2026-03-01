@@ -741,13 +741,21 @@ export function generateSymbolicNarrative(
   const insightLines: string[] = [];
   const lang = language;
 
-  // 1. Tension-derived insight
+  // 1. Question echo — ground the insight in the original question
+  if (response.question) {
+    insightLines.push(lang === 'it'
+      ? `**Alla domanda:** "${response.question}"`
+      : `**To the question:** "${response.question}"`);
+    insightLines.push('');
+  }
+
+  // 2. Tension-derived insight
   insightLines.push(INSIGHT_BY_TENSION[tensionType][lang]);
 
-  // 2. Strategy-derived insight
+  // 3. Strategy-derived insight
   insightLines.push(INSIGHT_BY_STRATEGY[completionStrategy][lang]);
 
-  // 3. Card-specific grounding — use the anchor card's keywords
+  // 4. Card-specific grounding — use the anchor card's keywords
   const anchorStep = transformationSteps.find(s => s.role === 'anchor') ?? transformationSteps[0];
   const anchorPlaced = spread[transformationSteps.indexOf(anchorStep)] ?? spread[0];
   const anchorKws = anchorPlaced.card.keywords.slice(0, 3);
@@ -759,7 +767,18 @@ export function generateSymbolicNarrative(
       : `The key card — **${anchorStep.cardName}** — carries the themes of ${kwList}. This is the reading's gravitational center.`);
   }
 
-  // 4. Concrete answer framing based on question
+  // 5. Per-card contribution summary for multi-card readings
+  if (response.question && transformationSteps.length > 1) {
+    insightLines.push('');
+    for (const step of transformationSteps) {
+      const reconfig = step.reconfiguration.charAt(0).toLowerCase() + step.reconfiguration.slice(1);
+      insightLines.push(lang === 'it'
+        ? `**${step.cardName}** (${step.role}): ${reconfig}`
+        : `**${step.cardName}** (${step.role}): ${reconfig}`);
+    }
+  }
+
+  // 6. Concrete answer framing — always include for questions
   if (response.question) {
     insightLines.push('');
     insightLines.push(lang === 'it'

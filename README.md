@@ -239,7 +239,74 @@ Please follow [Conventional Commits](https://www.conventionalcommits.org/) for c
 
 ---
 
-## 📄 License
+## � API Token & Security
+
+MTPS uses the **GitHub Models** inference API for AI-powered narrative generation.
+Each user provides their own token via the in-app settings modal.
+
+### How it works
+
+1. Click the **Key** icon in the header (or the banner) to open the token modal.
+2. Enter a GitHub Personal Access Token (`ghp_…` or `github_pat_…`).
+3. The token is saved in your browser's `localStorage` (`mtps_user_token`).
+4. It is **only** transmitted to `https://models.inference.ai.azure.com` — the GitHub Models endpoint.
+
+### Security guarantees
+
+- **No server** — this is a fully static site; your token never leaves your browser except to the GitHub API.
+- **Not in source code** — no tokens are embedded in the build.
+- **Not logged** — the token is never printed to the console.
+- **No source maps** — production builds have source maps disabled.
+- **LocalStorage only** — clear it anytime via the modal or your browser settings.
+
+### Recommended token scope
+
+Create a **fine-grained personal access token** with the minimum scope required
+for GitHub Models. See [GitHub docs](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens) for details.
+
+---
+
+## 🚀 Deployment (GitHub Pages)
+
+The app is deployed to GitHub Pages at:
+**https://lordeassan.github.io/tarological-system/**
+
+### Deploy steps
+
+```bash
+# 1. Install gh-pages if not already present
+npm install --save-dev gh-pages
+
+# 2. Build + deploy
+npm run deploy
+```
+
+This runs `npm run build` (which includes `tsc -b && vite build`) then pushes the
+`dist/` folder to the `gh-pages` branch.
+
+### GitHub Pages configuration
+
+1. Go to **Settings → Pages** in the repository.
+2. Set **Source** to "Deploy from a branch".
+3. Set **Branch** to `gh-pages` / `/ (root)`.
+4. The site will be available at `https://lordeassan.github.io/tarological-system/`.
+
+### SPA routing
+
+A `404.html` (copy of `index.html`) is automatically generated during build
+so that GitHub Pages routes all paths back to the SPA entry point.
+
+### Linking from the main site
+
+In the `lordeassan.github.io` repository, add a link:
+
+```html
+<a href="/tarological-system/">MTPS — Tarological System</a>
+```
+
+---
+
+## �📄 License
 
 MIT — see [LICENSE](LICENSE) for details.
 

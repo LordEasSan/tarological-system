@@ -56,12 +56,14 @@ import type {
   ResolutionArchetype,
   SymbolicEmbodiment,
   InterrogationMode,
-  DominantArchetype,
   SymbolicRole,
   TarotCard,
   TensionType,
   CompletionStrategy,
 } from '../../types';
+import { detectQuestionMode } from './question-mode';
+import { applyNarrativeVariation } from './narrative-variation';
+import { validateNarrative, generateSafeFallback } from './narrative-quality-validator';
 
 // ─── Helpers ────────────────────────────────────────
 
@@ -91,6 +93,99 @@ function extractQuestionKeywords(question: string): string[] {
     .replace(/[?.,!;:'"]/g, '')
     .split(/\s+/)
     .filter(w => w.length > 2 && !stops.has(w));
+}
+
+/**
+ * Extract the core noun phrase from a question for use in narrative templates.
+ * Strips interrogative framing (WH-word + auxiliary) to produce a grammatically
+ * natural fragment suitable for template insertion as a noun phrase.
+ *
+ * "what is the true friend?"         → "the true friend"
+ * "how does love transform?"         → "love"
+ * "what does this moment hold?"      → "this moment"
+ * "what lies ahead?"                 → "what lies ahead"
+ * "what is love?"                    → "love"
+ * "who am I becoming?"               → "becoming"
+ * "will I find love?"                → "love"
+ */
+export function extractQuestionCore(question: string): string {
+  let q = question.toLowerCase().replace(/[?.,!;:'"]/g, '').trim();
+  if (!q) return 'this';
+
+  // Strip interrogative prefix + auxiliary verb(s) to isolate the core phrase
+  const frames: RegExp[] = [
+    /^(?:what|which)\s+(?:kind\s+of\s+)?(?:is|are|was|were|does|do|did|has|have|had|will|would|could|should|can)\s+/,
+    /^how\s+(?:does|do|did|can|could|will|would|should|is|are)\s+/,
+    /^who\s+(?:is|are|was|were|am)\s+/,
+    /^why\s+(?:is|are|does|do|did|has|have|had|will|would|could|should|can)\s+/,
+    /^when\s+(?:does|do|did|will|would|could|should|has|have|had)\s+/,
+    /^where\s+(?:does|do|did|will|would|could|should|has|have|had)\s+/,
+    /^(?:am|is|are|was|were|do|does|did|will|would|could|should|can|have|has|had)\s+(?:i|you|we|they|he|she|it|there)\s+/,
+  ];
+
+  let frameMatched = false;
+  for (const f of frames) {
+    const stripped = q.replace(f, '');
+    if (stripped !== q) {
+      q = stripped.trim();
+      frameMatched = true;
+      break;
+    }
+  }
+
+  // If no frame matched (e.g. "what lies ahead?"), only strip "how to" / "why"
+  if (!frameMatched) {
+    q = q.replace(/^how\s+to\s+/, '').replace(/^(?:why|when|where)\s+/, '').trim();
+  }
+
+  // Remove trailing filler phrases
+  q = q.replace(/\s+(?:for\s+me|for\s+us|for\s+you|to\s+me|about\s+me|right\s+now|anymore)$/, '').trim();
+
+  // Strip leading pronouns ("i becoming" → "becoming")
+  q = q.replace(/^(?:i|me|we|us)\s+/, '').trim();
+
+  // Truncate at verb boundaries to extract the noun-phrase core
+  const words = q.split(/\s+/);
+  const VERBS = new Set([
+    'transform', 'change', 'become', 'becoming', 'emerge', 'happen',
+    'unfold', 'affect', 'mean', 'means', 'hold', 'move', 'evolve',
+    'manifest', 'look', 'feel', 'think', 'go', 'come', 'inhabit',
+    'live', 'work', 'take', 'give', 'surround', 'bring', 'exist',
+    'reveal', 'hide', 'define', 'require', 'need', 'want', 'await',
+    'find', 'see', 'know', 'learn', 'teach', 'show', 'tell',
+    'lies', 'stands', 'keeps', 'makes', 'says', 'ask', 'asks',
+    'lead', 'leads', 'hurt', 'hurts', 'heal', 'heals', 'break',
+    'create', 'destroy', 'open', 'close', 'remain', 'stay', 'leave',
+  ]);
+  const WH_WORDS = new Set(['what', 'how', 'who', 'why', 'when', 'where', 'which']);
+  const TRAILING = new Set(['the', 'a', 'an', 'of', 'in', 'on', 'at', 'to', 'for', 'with', 'by', 'from']);
+
+  // Skip leading verb: "find love" → "love"
+  if (words.length > 1 && VERBS.has(words[0])) {
+    words.splice(0, 1);
+    q = words.join(' ');
+  }
+
+  // Cut at interior verb: "this moment hold" → "this moment"
+  if (words.length > 1) {
+    const verbIdx = words.findIndex((w, i) => i > 0 && VERBS.has(w));
+    if (verbIdx > 0) {
+      let end = verbIdx;
+      while (end > 1 && TRAILING.has(words[end - 1])) end--;
+      // Don't truncate if it would leave only a WH-word
+      if (end > 1 || !WH_WORDS.has(words[0])) {
+        q = words.slice(0, end).join(' ');
+      }
+    }
+  }
+
+  // Safety cap at 6 words
+  const finalWords = q.split(/\s+/);
+  if (finalWords.length > 6) {
+    q = finalWords.slice(0, 6).join(' ');
+  }
+
+  return q.trim() || 'this';
 }
 
 // ─── Banned Phrases ─────────────────────────────────
@@ -848,7 +943,7 @@ function generateThesis(
   interrogationMode: InterrogationMode,
   depth: number,
 ): string {
-  const qCore = questionKeywords.slice(0, 2).join(' and ') || 'this';
+  const qCore = extractQuestionCore(question);
   const s = hash(card.name + question + String(depth));
 
   const domainClaim = interrogationMode === 'cosmological' ? essence.cosmic
@@ -1029,13 +1124,14 @@ function generateDestabilization(
 function generateReconfiguration(
   card: TarotCard,
   essence: ArchetypalEssence,
+  question: string,
   questionKeywords: string[],
   questionDomain: QuestionDomain,
   mode: TransformationMode,
   interrogationMode: InterrogationMode,
   depth: number,
 ): string {
-  const qCore = questionKeywords[0] || 'this';
+  const qCore = extractQuestionCore(question);
   const s = hash(card.name + 'reconfig' + String(depth));
 
   switch (mode) {
@@ -1150,12 +1246,13 @@ function evolveState(
   card: TarotCard,
   essence: ArchetypalEssence,
   previousState: ExistentialState | null,
+  question: string,
   questionKeywords: string[],
   mode: TransformationMode,
   depth: number,
   role: SymbolicRole,
 ): ExistentialState {
-  const qCore = questionKeywords[0] || 'meaning';
+  const qCore = extractQuestionCore(question);
   const primaryKw = card.keywords[0];
 
   const modeLabel: Record<TransformationMode, string> = {
@@ -1234,7 +1331,7 @@ function generateSynthesis(
   mode: TransformationMode,
   interrogationMode: InterrogationMode,
 ): string {
-  const qCore = questionKeywords[0] || 'this';
+  const qCore = extractQuestionCore(question);
   const cardNames = steps.map(s => s.cardName).join(', ');
   const s = hash(question + 'synth' + mode);
 
@@ -1411,6 +1508,7 @@ export function generateQuestionTargetedNarrative(
   const interrogationMode = lens.mode;
   const questionKeywords = extractQuestionKeywords(question);
   const questionDomain = classifyQuestionDomain(question);
+  const questionMode = detectQuestionMode(question);
 
   // Gather card info for mode selection
   const cardNames = spread.map(p => p.card.name);
@@ -1458,9 +1556,15 @@ export function generateQuestionTargetedNarrative(
 
     // Reconfiguration
     const reconfiguration = sanitize(generateReconfiguration(
-      card, essence, questionKeywords, questionDomain,
+      card, essence, question, questionKeywords, questionDomain,
       transformationMode, interrogationMode, depth,
     ));
+
+    // Apply narrative variation for syntactic diversity across cards
+    const varied = applyNarrativeVariation(
+      thesis, destabilization, reconfiguration,
+      card.name, role, depth, questionMode,
+    );
 
     // Embodiment
     const embodiment = generateEmbodiment(card, transformationMode);
@@ -1469,7 +1573,7 @@ export function generateQuestionTargetedNarrative(
     // Evolve state
     currentState = evolveState(
       card, essence, currentState,
-      questionKeywords, transformationMode, depth, role,
+      question, questionKeywords, transformationMode, depth, role,
     );
     existentialStates.push(currentState);
 
@@ -1478,9 +1582,9 @@ export function generateQuestionTargetedNarrative(
       cardName: card.name,
       role,
       transformationMode,
-      thesis,
-      destabilization,
-      reconfiguration,
+      thesis: varied.thesis,
+      destabilization: varied.destabilization,
+      reconfiguration: varied.reconfiguration,
       embodiment,
       existentialState: { ...currentState },
     };
@@ -1549,7 +1653,29 @@ export function generateQuestionTargetedNarrative(
   sections.push(synthesis);
   sections.push('', '---', '', `*${disclaimer}*`);
 
-  const fullNarrative = sections.join('\n');
+  let fullNarrative = sections.join('\n');
+
+  // 8. Validate narrative quality
+  const narrativeForValidation: QuestionTargetedNarrative = {
+    questionRestatement,
+    transformationMode,
+    transformationSteps,
+    existentialState: finalState,
+    resolutionArchetype,
+    tensionType,
+    completionStrategy,
+    cardExplanations,
+    synthesis,
+    embodiments,
+    llmArticulation: llmArticulationText,
+    fullNarrative,
+    disclaimer,
+    cardReferences: {},
+  };
+  const validation = validateNarrative(narrativeForValidation);
+  if (!validation.valid) {
+    fullNarrative = generateSafeFallback(questionRestatement, transformationSteps, disclaimer);
+  }
 
   // Card references
   const cardReferences: Record<string, string> = {};

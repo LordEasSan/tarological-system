@@ -1,9 +1,10 @@
 import { Link, useLocation } from 'react-router-dom';
 import { ThemeToggle } from './ThemeToggle';
-import { Sparkles, Menu, X, HelpCircle } from 'lucide-react';
+import { Sparkles, Menu, X, HelpCircle, Key } from 'lucide-react';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTutorial } from '../../context/TutorialContext';
+import { useToken } from '../../context/TokenContext';
 
 const NAV_LINKS = [
   { to: '/', label: 'Home' },
@@ -12,10 +13,11 @@ const NAV_LINKS = [
   { to: '/verify', label: 'Verify' },
 ];
 
-export function Header() {
+export function Header({ onOpenTokenModal }: { onOpenTokenModal?: () => void }) {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const { startPageTour } = useTutorial();
+  const { isTokenValid } = useToken();
 
   return (
     <header className="sticky top-0 z-50 glass">
@@ -48,6 +50,18 @@ export function Header() {
 
           {/* Right side */}
           <div className="flex items-center gap-2">
+            <button
+              onClick={onOpenTokenModal}
+              className={`p-2 rounded-lg transition-all ${
+                isTokenValid
+                  ? 'dark:text-mtps-accent text-green-600 dark:hover:bg-mtps-purple/20 hover:bg-gray-100'
+                  : 'dark:text-amber-400 text-amber-500 dark:hover:bg-mtps-purple/20 hover:bg-gray-100 animate-pulse'
+              }`}
+              aria-label="Configure API token"
+              title={isTokenValid ? 'Token configured' : 'Set API token'}
+            >
+              <Key className="w-4.5 h-4.5" />
+            </button>
             <button
               onClick={startPageTour}
               className="p-2 rounded-lg dark:text-mtps-muted dark:hover:text-mtps-gold dark:hover:bg-mtps-purple/20
