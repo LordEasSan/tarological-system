@@ -1,8 +1,8 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Sparkles, Send, RotateCcw, ShieldCheck, Eye, Layers,
-  BookOpen, Brain, Orbit, Grid3X3, FileText, Compass,
+  Sparkles, RotateCcw, ShieldCheck, Eye, Layers,
+  Brain, Orbit, Grid3X3, FileText, Compass,
   ArrowRight, RefreshCcw, Zap, MessageCircle,
   ChevronDown, ChevronUp, GitBranch, Flame, Activity,
   Settings, Globe,
@@ -11,7 +11,6 @@ import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { SpreadVisualizer, TarotCardView } from '../components/cards';
 import { LTLVerifier } from '../components/verify';
-import { MeaningRadar } from '../components/charts';
 import { InfoTooltip } from '../components/tutorial';
 import { mockGenerate } from '../api';
 import { executeUnifiedReading, reinterpretReading } from '../engine/core';
@@ -164,13 +163,6 @@ export function UnifiedReadingPage() {
       setIsProcessing(false);
     }, 300);
   }, [response, state.parameters]);
-
-  const handleReset = () => {
-    setQuestion('');
-    setResponse(null);
-    setSymbolicNarrative(null);
-    setView('narrative');
-  };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -527,7 +519,6 @@ function SpreadView({ response }: { response: UnifiedReadingResponse }) {
 
 function InteractionMapView({ response }: { response: UnifiedReadingResponse }) {
   const { interactionMatrix } = response.symbolicConfiguration;
-  const spread = response.spread;
 
   return (
     <div className="space-y-6">
@@ -1166,7 +1157,7 @@ function IdaBadge({ label, value, colorClass }: { label: string; value: string; 
 function SymbolicReadingView({
   narrative,
   response,
-  modeConfig,
+  modeConfig: _modeConfig,
 }: {
   narrative: SymbolicNarrative;
   response: UnifiedReadingResponse;
@@ -1485,13 +1476,12 @@ function SymbolicReadingView({
 
 function SidebarSummary({
   response,
-  modeConfig,
+  modeConfig: _modeConfig,
 }: {
   response: UnifiedReadingResponse;
   modeConfig: typeof MODE_CONFIG['divinatory'];
 }) {
   const config = response.symbolicConfiguration;
-  const anchor = config.dominantArchetypes.find(a => a.role === 'anchor');
   const entropyLabel = config.entropy > 0.7 ? 'High' : config.entropy > 0.4 ? 'Moderate' : 'Low';
 
   return (

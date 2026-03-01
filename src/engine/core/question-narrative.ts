@@ -937,8 +937,8 @@ function generateThesis(
   essence: ArchetypalEssence,
   question: string,
   questionDomain: QuestionDomain,
-  questionKeywords: string[],
-  previousState: ExistentialState | null,
+  _questionKeywords: string[],
+  _previousState: ExistentialState | null,
   mode: TransformationMode,
   interrogationMode: InterrogationMode,
   depth: number,
@@ -1125,10 +1125,10 @@ function generateReconfiguration(
   card: TarotCard,
   essence: ArchetypalEssence,
   question: string,
-  questionKeywords: string[],
-  questionDomain: QuestionDomain,
+  _questionKeywords: string[],
+  _questionDomain: QuestionDomain,
   mode: TransformationMode,
-  interrogationMode: InterrogationMode,
+  _interrogationMode: InterrogationMode,
   depth: number,
 ): string {
   const qCore = extractQuestionCore(question);
@@ -1247,7 +1247,7 @@ function evolveState(
   essence: ArchetypalEssence,
   previousState: ExistentialState | null,
   question: string,
-  questionKeywords: string[],
+  _questionKeywords: string[],
   mode: TransformationMode,
   depth: number,
   role: SymbolicRole,
@@ -1324,7 +1324,7 @@ function determineResolutionArchetype(
 
 function generateSynthesis(
   question: string,
-  questionKeywords: string[],
+  _questionKeywords: string[],
   steps: TransformationStep[],
   archetype: ResolutionArchetype,
   finalState: ExistentialState,
@@ -1500,9 +1500,9 @@ function getDisclaimer(mode: InterrogationMode): string {
 export function generateQuestionTargetedNarrative(
   config: SymbolicConfiguration,
   spread: PlacedCard[],
-  biasVector: InterpretiveBiasVector,
+  _biasVector: InterpretiveBiasVector,
   lens: InterpretiveWeightVector,
-  context: UserProfileContext,
+  _context: UserProfileContext,
   question: string,
 ): QuestionTargetedNarrative {
   const interrogationMode = lens.mode;

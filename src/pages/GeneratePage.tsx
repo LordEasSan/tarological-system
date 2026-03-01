@@ -474,9 +474,9 @@ export function GeneratePage() {
                       </span>
                     )}
                     {/* ΔQ from last iteration */}
-                    {iterationLog && iterationLog.iterations.length > 1 && (() => {
-                      const last = iterationLog.iterations[iterationLog.iterations.length - 1];
-                      const prev = iterationLog.iterations[iterationLog.iterations.length - 2];
+                    {iterationLog && iterationLog.entries.length > 1 && (() => {
+                      const last = iterationLog.entries[iterationLog.entries.length - 1];
+                      const prev = iterationLog.entries[iterationLog.entries.length - 2];
                       const delta = last.quality.composite - prev.quality.composite;
                       return (
                         <span className={`text-[10px] font-mono font-bold ${

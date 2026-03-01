@@ -28,7 +28,6 @@ import type {
   UnifiedNarrative,
   InterrogationMode,
   DominantArchetype,
-  TensionPair,
 } from '../../types';
 
 // ─── Mode-Specific Vocabulary ───────────────────────
@@ -151,7 +150,7 @@ function generateCardParagraph(
 function generateOpeningSection(
   mode: InterrogationMode,
   question: string,
-  lens: InterpretiveWeightVector,
+  _lens: InterpretiveWeightVector,
   config: SymbolicConfiguration,
   spread: PlacedCard[],
 ): string {
@@ -319,7 +318,7 @@ function generateStructuralResponseSection(
   config: SymbolicConfiguration,
   biasVector: InterpretiveBiasVector,
   mode: InterrogationMode,
-  lens: InterpretiveWeightVector,
+  _lens: InterpretiveWeightVector,
 ): string {
   const vocab = VOCABULARY[mode];
   const anchor = config.dominantArchetypes[0];
