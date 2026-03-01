@@ -18,16 +18,9 @@ npm install
 | Variable | Required | Default | Description |
 |---|---|---|---|
 | `VITE_API_BASE_URL` | No | `/tarological-system/api` | Cloudflare Worker API origin |
-| `VITE_GITHUB_LLM_TOKEN` | No | — | GitHub Models personal access token for LLM narrative |
 | `VITE_GITHUB_LLM_MODEL` | No | `gpt-4o-mini` | Model ID on GitHub Models |
 
-Create a `.env.local` file in the project root:
-
-```env
-VITE_GITHUB_LLM_TOKEN=ghp_xxxxx
-```
-
-> Without a token the app still works — narratives fall back to the local engine.
+> **API Token (BYOT):** The GitHub Models token is entered at runtime via the in-app Token Modal (🔑 icon in the header). It is stored only in the browser's `localStorage` and never committed or bundled. Without a token the app still works — narratives fall back to the local engine.
 
 ## Development
 
